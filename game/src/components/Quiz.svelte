@@ -21,7 +21,7 @@
   let picked = $state(null); // mc: chosen option n
   let order = $state([]); // order: items placed so far
   let q = $derived(quiz.questions[i]);
-  let stars = $derived(score === 10 ? 3 : score >= 9 ? 2 : score >= quiz.pass ? 1 : 0);
+  let stars = $derived(score === quiz.questions.length ? 3 : score >= quiz.questions.length - 1 ? 2 : score >= quiz.pass ? 1 : 0);
 
   function shuffle(a) {
     const b = [...a];

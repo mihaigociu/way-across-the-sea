@@ -11,8 +11,10 @@
   import {
     cities, seaLanes, empire, regions, seas, mountains, details, paulFirstJourney, litAtStart,
   } from '../data/world.js';
+  import { paulSecondJourney } from '../data/journey2.js';
   import { intro } from '../data/intro.js';
   import { quiz1 } from '../data/quiz1.js';
+  import { quiz2 } from '../data/quiz2.js';
   import Quiz from './Quiz.svelte';
 
   // ---------- static geometry (projected once) ----------
@@ -50,8 +52,8 @@
   // ---------- UI state ----------
   let lang = $state('en');
   const T = {
-    en: { play: "Paul's First Journey", next: 'Next', back: 'Back', exit: 'Close', reset: 'Whole map', lamps: 'Christian communities', lanes: 'Sea lanes', empire: 'Roman Empire (c. AD 46)', step: 'Stop', of: 'of', modern: 'Today', finish: 'Finish' },
-    ro: { play: 'Prima călătorie a lui Pavel', next: 'Înainte', back: 'Înapoi', exit: 'Închide', reset: 'Toată harta', lamps: 'Comunități creștine', lanes: 'Rute pe mare', empire: 'Imperiul Roman (cca. 46 d.Hr.)', step: 'Oprirea', of: 'din', modern: 'Astăzi', finish: 'Gata' },
+    en: { play: "Paul's First Journey", next: 'Next', back: 'Back', exit: 'Close', reset: 'Whole map', locked: 'Pass the first quiz to unlock', note: 'What historians say', lamps: 'Christian communities', lanes: 'Sea lanes', empire: 'Roman Empire (c. AD 46)', step: 'Stop', of: 'of', modern: 'Today', finish: 'Finish' },
+    ro: { play: 'Prima călătorie a lui Pavel', next: 'Înainte', back: 'Înapoi', exit: 'Închide', reset: 'Toată harta', locked: 'Treci primul test ca să deblochezi', note: 'Ce spun istoricii', lamps: 'Comunități creștine', lanes: 'Rute pe mare', empire: 'Imperiul Roman (cca. 46 d.Hr.)', step: 'Oprirea', of: 'din', modern: 'Astăzi', finish: 'Gata' },
   };
   let t = $derived(T[lang]);
 
@@ -106,7 +108,7 @@
   }
   function storyToJourney() {
     endStory();
-    startJourney();
+    startJourney(paulFirstJourney);
   }
 
   // Labels shrink more slowly than the map grows, so they stay readable.
@@ -141,57 +143,84 @@
     return sample.pts[i];
   };
 
-  // ---------- journey ----------
-  const J = paulFirstJourney;
-  let journey = $state(null); // { step, phase: 'moving'|'card', f }
+  // ---------- journeys ----------
+  const journeys = [paulFirstJourney, paulSecondJourney];
+  let J = $state.raw(paulFirstJourney);
+  let journey = $state(null); // { step, phase: 'moving'|'card', f, lamp, chosen }
   let legSamples = [];
   let drawn = $state([]); // [{mode, pts}] completed + current partial legs
   let traveller = $state(null); // {x, y, mode, flip}
+  // ?all in the URL opens every chapter (for leaders and testing).
+  let unlockAll = $state(false);
+  const unlocked = (j) => unlockAll || !j.requires || progress[j.requires]?.passed;
 
+  // Sampled once per journey; a "stay" leg (another page at the same place) has no path.
   function buildLegs() {
     legSamples = J.legs.map((leg, i) => {
-      if (i === 0) return null;
+      if (i === 0 || leg.stay) return null;
       const from = city[J.legs[i - 1].to].xy;
       const to = city[leg.to].xy;
       const pts = [from, ...(leg.via ?? []).map(project), to];
       return { mode: leg.mode, ...samplePath(smooth(pts)) };
     });
   }
+  // The communities already burning when a journey starts: those of the journeys before it.
+  const litBefore = (j) => [...litAtStart, ...journeys.slice(0, journeys.indexOf(j)).flatMap((x) => x.lamps)];
+  const legArrows = (leg) =>
+    (leg.arrows ?? []).map((a, n) => ({ ...makeArrow(xy(a.from ?? leg.to), xy(a.to)), label: a.label, style: a.style ?? 'spread', anchor: a.anchor, n }));
+  const focusLeg = (leg) => leg.focus && zoomTo(leg.focus.map(xy), 1600);
 
-  function startJourney() {
+  function startJourney(j = J) {
     quizOpen = false;
     story = null;
-    arrows = [];
-    year = null;
-    lit = new Set(litAtStart);
+    J = j;
+    buildLegs();
+    year = J.legs[0].year ?? J.years;
+    lit = new Set(litBefore(J));
     newlyLit = new Set();
     drawn = [];
-    journey = { step: 0, phase: 'card', f: 1 };
-    traveller = { x: city.antiochia.xy[0], y: city.antiochia.xy[1], mode: 'land', flip: false };
-    zoomTo(J.legs.map((l) => city[l.to].xy), 1800);
+    arrows = legArrows(J.legs[0]);
+    journey = { step: 0, phase: 'card', f: 1, lamp: false, chosen: null };
+    const [x, y] = city[J.legs[0].to].xy;
+    traveller = { x, y, mode: 'land', flip: false };
+    if (J.legs[0].focus) focusLeg(J.legs[0]);
+    else zoomTo(J.legs.map((l) => city[l.to].xy), 1800);
   }
   function nextStep() {
     if (!journey) return;
     if (journey.step >= J.legs.length - 1) return endJourney();
-    journey = { step: journey.step + 1, phase: 'moving', f: 0 };
+    const step = journey.step + 1, leg = J.legs[step];
+    arrows = [];
+    if (leg.year) year = leg.year;
+    focusLeg(leg);
+    journey = { step, phase: 'moving', f: 0, lamp: false, chosen: null };
+    if (!legSamples[step]) arrive();
   }
   function endJourney() {
     journey = null;
     traveller = null;
+    arrows = []; // the route and the lamps stay on the map until something else starts
     resetView();
   }
   function arrive() {
     const leg = J.legs[journey.step];
-    if (J.lamps.includes(leg.to) && !lit.has(leg.to)) {
+    const lamp = J.lamps.includes(leg.to) && !lit.has(leg.to);
+    if (lamp) {
       lit = new Set([...lit, leg.to]);
       newlyLit = new Set([...newlyLit, leg.to]);
     }
-    journey = { ...journey, phase: 'card', f: 1 };
+    arrows = legArrows(leg);
+    journey = { ...journey, phase: 'card', f: 1, lamp };
   }
+  const choose = (n) => journey && (journey = { ...journey, chosen: n });
 
   // ---------- quiz ----------
   const PROGRESS_KEY = 'waysea.progress';
+  const quizzes = { quiz1, quiz2 };
   let quizOpen = $state(false);
+  let Q = $state.raw(quiz1); // the open quiz
+  // The highest rank earned so far, shown in the cartouche.
+  let topRank = $derived([quiz2, quiz1].find((q) => progress[q.id]?.passed));
   let progress = $state({});
   let picking = $state(false); // a map question is waiting for a click: names are hidden
   let pickMark = $state(null); // { click: [x, y], target: [x, y], r, ok }
@@ -202,20 +231,28 @@
     try { progress = JSON.parse(localStorage.getItem(PROGRESS_KEY) ?? '{}'); } catch { progress = {}; }
   }
   function saveQuiz(r) {
-    const best = progress[quiz1.id];
+    const best = progress[Q.id];
     if (!best || r.score > best.score) {
-      progress = { ...progress, [quiz1.id]: r };
+      progress = { ...progress, [Q.id]: r };
       try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch {}
     }
   }
-  function openQuiz() {
+  function openQuiz(q = Q) {
+    Q = q;
     endStory();
     journey = null;
     traveller = null;
     drawn = [];
     lit = new Set(litAtStart);
+    arrows = [];
     quizOpen = true;
     resetView();
+  }
+  // "Hear the story again" after a failed quiz: the introduction, or the journey the quiz is about.
+  function replayFor(q) {
+    closeQuiz();
+    if (q.replay === 'intro') startStory();
+    else startJourney(journeys.find((j) => j.id === q.replay));
   }
   function closeQuiz() {
     quizOpen = false;
@@ -295,8 +332,8 @@
     }
 
     loadProgress();
+    unlockAll = new URLSearchParams(location.search).has('all');
     laneSamples = lanes.map((l) => samplePath(l.d));
-    buildLegs();
     ships = Array.from({ length: 14 }, (_, i) => {
       const lane = i % lanes.length;
       return { lane, f: rand(), dir: rand() > 0.5 ? 1 : -1, speed: 9 + rand() * 7, wait: 0, x: 0, y: 0, flip: false, bob: rand() * 6 };
@@ -326,7 +363,7 @@
         const smp = legSamples[journey.step];
         const f = Math.min(1, journey.f + (150 / k) * dt / Math.max(smp.L, 1));
         const n = Math.max(2, Math.round(f * (smp.pts.length - 1)) + 1);
-        const done = J.legs.slice(1, journey.step).map((_, i) => ({ mode: legSamples[i + 1].mode, pts: legSamples[i + 1].pts }));
+        const done = legSamples.slice(1, journey.step).filter(Boolean).map((l) => ({ mode: l.mode, pts: l.pts }));
         drawn = [...done, { mode: smp.mode, pts: smp.pts.slice(0, n) }];
         const [x, y] = smp.pts[n - 1];
         const [px] = smp.pts[Math.max(0, n - 3)];
@@ -459,7 +496,7 @@
       </g>
 
       <!-- introduction arrows -->
-      {#each arrows as a (story?.step + '-' + a.n)}
+      {#each arrows as a ((story ? 's' + story.step : 'j' + journey?.step) + '-' + a.n)}
         <g class="arrow {a.style}" style="--delay:{a.n * 0.12}s">
           <path d={a.d} pathLength="1" stroke-width={2.2 / k} />
           <path class="head" transform="translate({a.end[0]},{a.end[1]}) rotate({a.angle}) scale({1 / Math.pow(k, 0.85)})"
@@ -559,7 +596,7 @@
 
   <header class="cartouche">
     <h1>The Way Across the Sea</h1>
-    {#if progress[quiz1.id]?.passed}<div class="rank">⚓ {quiz1.rank[lang]} {'★'.repeat(progress[quiz1.id].stars)}</div>{/if}
+    {#if topRank}<div class="rank">⚓ {topRank.rank[lang]} {'★'.repeat(progress[topRank.id].stars)}</div>{/if}
     <p>{lang === 'en' ? 'The Mediterranean world, ' : 'Lumea mediteraneeană, '}{year ? year[lang] : lang === 'en' ? 'c. AD 46' : 'cca. 46 d.Hr.'}</p>
   </header>
 
@@ -576,21 +613,30 @@
         <span class="icon">📜</span>
         <span><b>{intro.title[lang]}</b><small>{intro.years[lang]}</small></span>
       </button>
-      <button class="play" onclick={startJourney}>
-        <span class="icon">▶</span>
-        <span><b>{J.title[lang]}</b><small>{J.years[lang]} · {lang === 'en' ? 'Acts' : 'Fapte'} 13–14</small></span>
-      </button>
-      <button class="play" onclick={openQuiz}>
-        <span class="icon">⚓</span>
-        <span><b>{quiz1.title[lang]}</b>
-          <small>{#if progress[quiz1.id]}{'★'.repeat(progress[quiz1.id].stars)}{'☆'.repeat(3 - progress[quiz1.id].stars)} · {progress[quiz1.id].score}/10{:else}{quiz1.subtitle[lang]}{/if}</small></span>
-      </button>
+      {#each journeys as j}
+        {@const open = unlocked(j)}
+        <button class="play" class:locked={!open} disabled={!open} onclick={() => startJourney(j)}>
+          <span class="icon">{open ? '▶' : '🔒'}</span>
+          <span><b>{j.title[lang]}</b>
+            <small>{#if open}{j.years[lang]} · {lang === 'en' ? 'Acts' : 'Fapte'} {j.acts}{:else}{t.locked}{/if}</small></span>
+        </button>
+        {#if j.quiz && open}
+          {@const q = quizzes[j.quiz]}
+          {@const p = progress[q.id]}
+          <button class="play" onclick={() => openQuiz(q)}>
+            <span class="icon">⚓</span>
+            <span><b>{q.title[lang]}</b>
+              <small>{#if p}{'★'.repeat(p.stars)}{'☆'.repeat(3 - p.stars)} · {p.score}/{q.questions.length}{:else}{q.subtitle[lang]}{/if}</small></span>
+          </button>
+        {/if}
+      {/each}
     </div>
   {/if}
 
   {#if quizOpen}
-    <Quiz quiz={quiz1} {lang} {requestPick} {endPick} onclose={closeQuiz} onsave={saveQuiz}
-          onreplay={() => { closeQuiz(); startStory(); }} />
+    {#key Q.id}
+      <Quiz quiz={Q} {lang} {requestPick} {endPick} onclose={closeQuiz} onsave={saveQuiz} onreplay={() => replayFor(Q)} />
+    {/key}
   {/if}
 
   {#if story}
@@ -615,7 +661,7 @@
           {#if story.step < intro.steps.length - 1}
             <button onclick={() => storyGo(story.step + 1)}>{t.next} ▶</button>
           {:else}
-            <button onclick={storyToJourney}>{J.title[lang]} ▶</button>
+            <button onclick={storyToJourney}>{paulFirstJourney.title[lang]} ▶</button>
           {/if}
         </div>
       </article>
@@ -629,24 +675,43 @@
   </aside>
 
   {#if journey && journey.phase === 'card' && legCity}
+    {#key J.id + journey.step}
     <article class="card">
-      <div class="step">{t.step} {journey.step + 1} {t.of} {J.legs.length}</div>
+      <div class="step">{J.title[lang]} · {t.step} {journey.step + 1} {t.of} {J.legs.length}</div>
       <h2>{legCity.la}</h2>
       <div class="sub">{legCity[lang]} · {t.modern}: {legCity.modern}</div>
-      {#if newlyLit.has(leg.to) && J.legs.findIndex((l) => l.to === leg.to) === journey.step}
-        <div class="lit">🪔 {lang === 'en' ? 'A new community!' : 'O comunitate nouă!'}</div>
+      {#if leg.title}<h3>{leg.title[lang]}</h3>{/if}
+      {#if journey.lamp}
+        <div class="lit">🪔 {lang === 'en' ? 'A lamp is lit!' : 'Se aprinde o candelă!'}</div>
       {/if}
       <p>{leg[lang]}</p>
+      {#if leg.choice}
+        <div class="choice">
+          <div class="q">{leg.choice.q[lang]}</div>
+          {#each leg.choice.options as o, n}
+            <button class="opt" class:picked={journey.chosen === n} disabled={journey.chosen !== null} onclick={() => choose(n)}>{o[lang]}</button>
+          {/each}
+          {#if journey.chosen !== null}
+            <p class="reply"><i>{leg.choice.options[journey.chosen].reply[lang]}</i> {leg.choice.after[lang]}</p>
+          {/if}
+        </div>
+      {/if}
+      {#if leg.note}
+        <details class="note"><summary>📜 {t.note}</summary>{leg.note[lang]}</details>
+      {/if}
       <div class="buttons">
         {#if journey.step < J.legs.length - 1}
           <button class="ghost" onclick={endJourney}>{t.exit}</button>
-          <button onclick={nextStep}>{t.next} ▶</button>
+          <button onclick={nextStep} disabled={leg.choice && journey.chosen === null}>{t.next} ▶</button>
         {:else}
           <button class="ghost" onclick={endJourney}>{t.finish} ✓</button>
-          <button onclick={() => { endJourney(); openQuiz(); }}>⚓ {lang === 'en' ? 'Take the quiz' : 'Fă testul'} ▶</button>
+          {#if J.quiz}
+            <button onclick={() => { endJourney(); openQuiz(quizzes[J.quiz]); }}>⚓ {lang === 'en' ? 'Take the quiz' : 'Fă testul'} ▶</button>
+          {/if}
         {/if}
       </div>
     </article>
+    {/key}
   {/if}
 
   {#if hover}
@@ -737,6 +802,27 @@
   .pick .mark.ok { stroke: #3f6d1f; }
   .cartouche .rank { font-size: 14px; color: #8b4a12; margin-top: 2px; }
   .card.left { right: auto; left: 24px; }
+  .card { max-height: calc(100vh - 110px); overflow: auto; box-sizing: border-box; }
+  .card h3 { font-family: 'IM Fell English', Georgia, serif; font-style: italic; font-weight: normal; font-size: 20px; color: #6e2a17; margin: 10px 0 0; }
+  .card h3 + .lit, .card h3 + p { margin-top: 6px; }
+  .choice { border-top: 1px solid rgba(92, 70, 48, 0.4); padding-top: 10px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 7px; }
+  .choice .q { font-style: italic; font-size: 17px; color: #6e2a17; }
+  .choice .opt { text-align: left; font-size: 16px; }
+  .choice .opt:disabled { cursor: default; opacity: 0.5; }
+  .choice .opt.picked { opacity: 1; background: #e6d29f; border-color: #8b4a12; }
+  .choice p.reply { margin: 6px 0 0; }
+  .note { font-size: 15px; line-height: 1.4; color: #4e3a26; background: rgba(92, 70, 48, 0.07); border-left: 3px solid #b39466; padding: 6px 10px; margin-bottom: 14px; }
+  .note summary { cursor: pointer; font-style: italic; color: #7a5636; }
+  .note[open] summary { margin-bottom: 4px; }
+  .play.locked { opacity: 0.6; cursor: default; }
+  .play.locked:hover { background: #efe0b9; }
+  .card button:disabled { opacity: 0.45; cursor: default; }
+  .arrow.blocked path { stroke: #6f6252; stroke-dasharray: 0.03 0.025; stroke-dashoffset: 0; opacity: 0; animation: appear 0.8s ease-out var(--delay) forwards; }
+  .arrow.blocked .head { fill: #6f6252; }
+  .arrow.blocked .arrow-l { fill: #4f4436; }
+  .arrow.link path { stroke: #8b6a3a; stroke-dasharray: 0.02 0.015; stroke-dashoffset: 0; opacity: 0; animation: appear 0.8s ease-out var(--delay) forwards; }
+  .arrow.link .head { fill: #8b6a3a; }
+  .arrow.link .arrow-l { fill: #6b4a22; }
   .card.tradition { border-style: dashed; }
   .arrow path { fill: none; stroke: #8b1e1e; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1.1s ease-out var(--delay) forwards; }
   .arrow .head { fill: #8b1e1e; stroke: none; opacity: 0; animation: appear 0.3s ease-out calc(var(--delay) + 1s) forwards; }

@@ -15,6 +15,7 @@ export const quiz1 = {
   },
   pass: 7,
   rank: { en: 'Deckhand', ro: 'Mus' },
+  replay: 'intro',
   questions: [
     {
       type: 'mc',
