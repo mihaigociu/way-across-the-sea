@@ -21,9 +21,11 @@ Deep link to a zoomed-in view: `?at=lon,lat,zoom`, e.g. `?at=35.4,32.3,9` for th
 | `src/lib/projection.js` | The single map projection (conic conformal, 1600×1000), shared by the build script and the browser |
 | `scripts/build-basemap.mjs` | Turns Natural Earth data (`scripts/raw/`, not committed) into projected, simplified SVG paths in `src/data/basemap.json`. Run it with `npm run build:map` |
 | `src/data/intro.js` | The introduction's steps: text (EN/RO), map focus, lamps, arrows |
+| `src/data/quiz1.js` | Quiz gate 1: questions (EN/RO), answers, explanations, the children's feedback lines |
+| `src/components/Quiz.svelte` | The quiz player (multiple choice, ordering, map questions) |
 | `src/data/world.js` | Historical data: cities, sea lanes, the empire's extent (c. AD 46), regions, seas, mountains, and the journey (bilingual) |
 | `src/components/AncientMap.svelte` | The map: pan/zoom (d3-zoom), the parchment look, ships, lamps, the journey player |
-| `scripts/dev/shot.mjs` | A dev helper that takes Playwright screenshots of a running preview |
+| `scripts/dev/shot*.mjs` | Dev helpers that take Playwright screenshots of a running dev server; `shot-quiz.mjs` plays the whole quiz |
 
 To rebuild the base map, download the files into `scripts/raw/` from https://github.com/nvkelso/natural-earth-vector/tree/master/geojson: `ne_10m_land`, `ne_50m_lakes`, `ne_50m_rivers_lake_centerlines`.
 

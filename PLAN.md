@@ -409,6 +409,7 @@ legs: [{from: seleucia-pieria, to: salamis, mode: sea}, ...]
 - [x] **Base map prototype** (`game/`, 2026-10-20): an ancient-style SVG Mediterranean from Natural Earth data, ~60 cities, the empire c. AD 46, sea lanes with sailing ships, lamps for communities, pan/zoom, EN/RO, and a playable *Paul's First Journey* demo.
 - [x] **Introduction, "The story so far"** (AD 30–46, Acts 1–12), told by Grandfather Eli in 11 map steps: Jesus in Galilee and Jerusalem, the Resurrection, Pentecost (arrows to the peoples of Acts 2), the first community, Stephen and the scattering, Saul at Damascus, Cornelius, Antioch, where the apostles went (tradition), and AD 46. EN/RO. Content in `game/src/data/intro.js`.
 - [x] **Holy Land detail** (zoom 6×+): Capernaum, Bethlehem, Jericho, Caesarea Philippi, Ptolemais, Gaza; the Sea of Galilee, the Jordan, the Dead Sea; Galilee, Samaria, Judea, Perea, Decapolis, Phoenicia, Nabataea; Mt Carmel, Hermon, Tabor, the Mount of Olives. Plus Latin names of the great rivers.
+- [x] **Quiz gate 1** (`game/src/data/quiz1.js`): 10 questions on the introduction and the first journey. Types: multiple choice, put in order, and find it on the map (names hidden). Nikias and Thalia give feedback and explanations; 7/10 passes; stars; the first rank, *Deckhand / Mus*; progress saved in localStorage.
 - [ ] Base map, next: Roman roads (from DARE), provinces, a time slider, ancient coastlines (Ephesus/Miletus), a sea monster or two for decoration.
 - [ ] Content outline per chapter (bullet points + sources).
 

@@ -5,12 +5,15 @@
   import 'd3-transition';
   import { easeCubicInOut } from 'd3-ease';
   import { line, curveCatmullRom } from 'd3-shape';
+  import { geoDistance } from 'd3-geo';
   import basemap from '../data/basemap.json';
-  import { WIDTH as W, HEIGHT as H, project } from '../lib/projection.js';
+  import { WIDTH as W, HEIGHT as H, project, projection } from '../lib/projection.js';
   import {
     cities, seaLanes, empire, regions, seas, mountains, details, paulFirstJourney, litAtStart,
   } from '../data/world.js';
   import { intro } from '../data/intro.js';
+  import { quiz1 } from '../data/quiz1.js';
+  import Quiz from './Quiz.svelte';
 
   // ---------- static geometry (projected once) ----------
   const city = Object.fromEntries(cities.map((c) => [c.id, { ...c, xy: project(c.at) }]));
@@ -53,6 +56,7 @@
   let t = $derived(T[lang]);
 
   let k = $state(1);
+  let zt = { x: 0, y: 0, k: 1 }; // current zoom transform
   let tf = $state('translate(0,0) scale(1)');
   let svgEl, zoomer;
   let hover = $state(null); // {c, x, y}
@@ -87,6 +91,7 @@
     else zoomTo(s.focus.map(xy), 1600);
   }
   function startStory() {
+    quizOpen = false;
     journey = null;
     traveller = null;
     drawn = [];
@@ -154,6 +159,7 @@
   }
 
   function startJourney() {
+    quizOpen = false;
     story = null;
     arrows = [];
     year = null;
@@ -183,6 +189,72 @@
     journey = { ...journey, phase: 'card', f: 1 };
   }
 
+  // ---------- quiz ----------
+  const PROGRESS_KEY = 'waysea.progress';
+  let quizOpen = $state(false);
+  let progress = $state({});
+  let picking = $state(false); // a map question is waiting for a click: names are hidden
+  let pickMark = $state(null); // { click: [x, y], target: [x, y], r, ok }
+  let pickResolve = null;
+  let pickQ = null;
+
+  function loadProgress() {
+    try { progress = JSON.parse(localStorage.getItem(PROGRESS_KEY) ?? '{}'); } catch { progress = {}; }
+  }
+  function saveQuiz(r) {
+    const best = progress[quiz1.id];
+    if (!best || r.score > best.score) {
+      progress = { ...progress, [quiz1.id]: r };
+      try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress)); } catch {}
+    }
+  }
+  function openQuiz() {
+    endStory();
+    journey = null;
+    traveller = null;
+    drawn = [];
+    lit = new Set(litAtStart);
+    quizOpen = true;
+    resetView();
+  }
+  function closeQuiz() {
+    quizOpen = false;
+    endPick();
+    resetView();
+  }
+  function requestPick(q) {
+    zoomTo(q.focus.map(xy), 1400);
+    picking = true;
+    hover = null;
+    pickMark = null;
+    pickQ = q;
+    return new Promise((res) => (pickResolve = res));
+  }
+  function endPick() {
+    picking = false;
+    pickMark = null;
+    pickResolve = null;
+    pickQ = null;
+  }
+  function onMapClick(e) {
+    if (!picking || !pickResolve) return;
+    // screen → SVG viewBox → map coordinates (undo the zoom) → lon/lat
+    const pt = svgEl.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const v = pt.matrixTransform(svgEl.getScreenCTM().inverse());
+    const m = [(v.x - zt.x) / zt.k, (v.y - zt.y) / zt.k];
+    const km = geoDistance(projection.invert(m), pickQ.at) * 6371;
+    const ok = km <= pickQ.radiusKm;
+    const target = project(pickQ.at);
+    const edge = project([pickQ.at[0] + pickQ.radiusKm / (111.32 * Math.cos((pickQ.at[1] * Math.PI) / 180)), pickQ.at[1]]);
+    pickMark = { click: m, target, r: Math.hypot(edge[0] - target[0], edge[1] - target[1]), ok };
+    picking = false;
+    const res = pickResolve;
+    pickResolve = null;
+    res({ ok, km });
+  }
+
   // ---------- zoom ----------
   function zoomTo(points, duration = 1200) {
     const xs = points.map((p) => p[0]), ys = points.map((p) => p[1]);
@@ -207,6 +279,7 @@
       .translateExtent([[0, 0], [W, H]])
       .on('zoom', (e) => {
         k = e.transform.k;
+        zt = e.transform;
         tf = `translate(${e.transform.x},${e.transform.y}) scale(${e.transform.k})`;
       });
     select(svgEl).call(zoomer).on('dblclick.zoom', null);
@@ -221,6 +294,7 @@
       select(svgEl).call(zoomer.transform, zoomIdentity.translate(tx, ty).scale(kk));
     }
 
+    loadProgress();
     laneSamples = lanes.map((l) => samplePath(l.d));
     buildLegs();
     ships = Array.from({ length: 14 }, (_, i) => {
@@ -284,7 +358,8 @@
 </script>
 
 <div class="frame">
-  <svg bind:this={svgEl} viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMid meet" role="img"
+  <svg bind:this={svgEl} viewBox="0 0 {W} {H}" preserveAspectRatio="xMidYMid meet" role="img" class:picking
+       onclick={onMapClick}
        aria-label="Map of the Mediterranean world in the time of the Roman Empire">
     <defs>
       <!-- slightly wobbly, hand-inked coastline -->
@@ -369,7 +444,7 @@
       <!-- small names: Holy Land waters, regions and mountains; the great rivers -->
       {#each details as d}
         {@const p = project(d.at)}
-        <g class="detail {d.kind}" transform="translate({p[0]},{p[1]}) scale({labelScale})" opacity={k >= d.minK ? 1 : 0}>
+        <g class="detail {d.kind}" transform="translate({p[0]},{p[1]}) scale({labelScale})" opacity={k >= d.minK && !picking ? 1 : 0}>
           {#if d.kind === 'mount'}
             <path d="M-5 3 L0 -5 L5 3 Z" fill="#cdb284" stroke="#6b4c2e" stroke-width="0.9" />
           {/if}
@@ -409,9 +484,9 @@
 
       <!-- cities -->
       {#each cityList as c (c.id)}
-        <g class="city" transform="translate({c.xy[0]},{c.xy[1]}) scale({labelScale})" role="button" tabindex="-1"
-           onpointerenter={(e) => (hover = { c, x: e.clientX, y: e.clientY })}
-           onpointermove={(e) => (hover = { c, x: e.clientX, y: e.clientY })}
+        <g class="city" data-id={c.id} transform="translate({c.xy[0]},{c.xy[1]}) scale({labelScale})" role="button" tabindex="-1"
+           onpointerenter={(e) => (hover = picking ? null : { c, x: e.clientX, y: e.clientY })}
+           onpointermove={(e) => (hover = picking ? null : { c, x: e.clientX, y: e.clientY })}
            onpointerleave={() => (hover = null)}>
           {#if lit.has(c.id)}
             <circle r="13" fill="url(#flame)" class="halo" class:new={newlyLit.has(c.id)} />
@@ -426,7 +501,7 @@
             <circle r="2.4" fill="#3e2414" />
           {/if}
           <circle r="11" fill="transparent" />
-          {#if showLabel(c)}
+          {#if showLabel(c) && !picking}
             <text class="label" class:big={c.tier === 1} class:small={c.tier === 3} {...labelPos(c)}>{c.la}</text>
           {/if}
           {#if lit.has(c.id)}
@@ -435,6 +510,16 @@
           {/if}
         </g>
       {/each}
+
+      <!-- quiz: where the answer is, and where the player clicked -->
+      {#if pickMark}
+        <g class="pick">
+          <circle cx={pickMark.target[0]} cy={pickMark.target[1]} r={Math.max(pickMark.r, 9 / k)} class="target" stroke-width={2.5 / k} />
+          <g transform="translate({pickMark.click[0]},{pickMark.click[1]}) scale({iconScale})">
+            <path d={pickMark.ok ? 'M-6 0 L-2 5 L7 -6' : 'M-5 -5 L5 5 M5 -5 L-5 5'} class="mark" class:ok={pickMark.ok} />
+          </g>
+        </g>
+      {/if}
 
       <!-- traveller -->
       {#if traveller && journey?.phase === 'moving'}
@@ -474,6 +559,7 @@
 
   <header class="cartouche">
     <h1>The Way Across the Sea</h1>
+    {#if progress[quiz1.id]?.passed}<div class="rank">⚓ {quiz1.rank[lang]} {'★'.repeat(progress[quiz1.id].stars)}</div>{/if}
     <p>{lang === 'en' ? 'The Mediterranean world, ' : 'Lumea mediteraneeană, '}{year ? year[lang] : lang === 'en' ? 'c. AD 46' : 'cca. 46 d.Hr.'}</p>
   </header>
 
@@ -484,7 +570,7 @@
     <button onclick={resetView}>{t.reset}</button>
   </nav>
 
-  {#if !journey && !story}
+  {#if !journey && !story && !quizOpen}
     <div class="start">
       <button class="play" onclick={startStory}>
         <span class="icon">📜</span>
@@ -494,7 +580,17 @@
         <span class="icon">▶</span>
         <span><b>{J.title[lang]}</b><small>{J.years[lang]} · {lang === 'en' ? 'Acts' : 'Fapte'} 13–14</small></span>
       </button>
+      <button class="play" onclick={openQuiz}>
+        <span class="icon">⚓</span>
+        <span><b>{quiz1.title[lang]}</b>
+          <small>{#if progress[quiz1.id]}{'★'.repeat(progress[quiz1.id].stars)}{'☆'.repeat(3 - progress[quiz1.id].stars)} · {progress[quiz1.id].score}/10{:else}{quiz1.subtitle[lang]}{/if}</small></span>
+      </button>
     </div>
+  {/if}
+
+  {#if quizOpen}
+    <Quiz quiz={quiz1} {lang} {requestPick} {endPick} onclose={closeQuiz} onsave={saveQuiz}
+          onreplay={() => { closeQuiz(); startStory(); }} />
   {/if}
 
   {#if story}
@@ -546,8 +642,8 @@
           <button class="ghost" onclick={endJourney}>{t.exit}</button>
           <button onclick={nextStep}>{t.next} ▶</button>
         {:else}
-          <span></span>
-          <button onclick={endJourney}>{t.finish} ✓</button>
+          <button class="ghost" onclick={endJourney}>{t.finish} ✓</button>
+          <button onclick={() => { endJourney(); openQuiz(); }}>⚓ {lang === 'en' ? 'Take the quiz' : 'Fă testul'} ▶</button>
         {/if}
       </div>
     </article>
@@ -635,6 +731,11 @@
   .card .buttons { display: flex; justify-content: space-between; }
   .card .ghost { background: transparent; box-shadow: none; }
   .card p.narrator { font-style: italic; }
+  svg.picking { cursor: crosshair; }
+  .pick .target { fill: rgba(79, 122, 42, 0.18); stroke: #4f7a2a; stroke-dasharray: 4 3; }
+  .pick .mark { fill: none; stroke: #9a3a22; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .pick .mark.ok { stroke: #3f6d1f; }
+  .cartouche .rank { font-size: 14px; color: #8b4a12; margin-top: 2px; }
   .card.left { right: auto; left: 24px; }
   .card.tradition { border-style: dashed; }
   .arrow path { fill: none; stroke: #8b1e1e; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 1.1s ease-out var(--delay) forwards; }
