@@ -214,6 +214,48 @@
   }
   const choose = (n) => journey && (journey = { ...journey, chosen: n });
 
+  // Open a journey straight at a given stop (after a page refresh): lamps, route and year as if travelled.
+  function resumeJourney(j, step) {
+    startJourney(j);
+    step = Math.min(step, J.legs.length - 1);
+    if (step <= 0) return;
+    const legs = J.legs.slice(0, step + 1);
+    lit = new Set([...litBefore(J), ...legs.map((l) => l.to).filter((id) => J.lamps.includes(id))]);
+    drawn = legSamples.slice(1, step + 1).filter(Boolean).map((l) => ({ mode: l.mode, pts: l.pts }));
+    year = legs.findLast((l) => l.year)?.year ?? J.years;
+    arrows = legArrows(J.legs[step]);
+    journey = { step, phase: 'card', f: 1, lamp: false, chosen: null };
+    const f = legs.findLast((l) => l.focus);
+    if (f) focusLeg(f);
+  }
+
+  // ---------- where the player is, and the language (kept across a page refresh) ----------
+  const PLACE_KEY = 'waysea.place';
+  let ready = $state(false); // don't overwrite the saved place before it has been restored
+  $effect(() => {
+    const place = journey ? { journey: J.id, step: journey.step } : story ? { story: story.step } : null;
+    const l = lang;
+    if (!ready) return;
+    try {
+      localStorage.setItem('waysea.lang', l);
+      if (place) localStorage.setItem(PLACE_KEY, JSON.stringify(place));
+      else localStorage.removeItem(PLACE_KEY);
+    } catch {}
+  });
+  function restorePlace() {
+    let place = null;
+    try {
+      place = JSON.parse(localStorage.getItem(PLACE_KEY) ?? 'null');
+      if (localStorage.getItem('waysea.lang') === 'ro') lang = 'ro';
+    } catch {}
+    if (Number.isInteger(place?.story)) storyGo(Math.min(place.story, intro.steps.length - 1));
+    else if (Number.isInteger(place?.step)) {
+      const j = journeys.find((x) => x.id === place.journey);
+      if (j && unlocked(j)) resumeJourney(j, place.step);
+    }
+    ready = true;
+  }
+
   // ---------- quiz ----------
   const PROGRESS_KEY = 'waysea.progress';
   const quizzes = { quiz1, quiz2 };
@@ -338,6 +380,7 @@
       const lane = i % lanes.length;
       return { lane, f: rand(), dir: rand() > 0.5 ? 1 : -1, speed: 9 + rand() * 7, wait: 0, x: 0, y: 0, flip: false, bob: rand() * 6 };
     });
+    restorePlace();
 
     let last = performance.now();
     let raf;

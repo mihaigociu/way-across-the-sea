@@ -13,6 +13,7 @@ npm run build      # static site in dist/ (for GitHub Pages)
 ```
 
 Deep link to a zoomed-in view: `?at=lon,lat,zoom`, e.g. `?at=35.4,32.3,9` for the Holy Land.
+Progress (quizzes, the current story step or journey stop, and the language) is kept in `localStorage`, so a refresh brings the player back to the same place.
 Add `?all` to open every chapter without passing the quizzes (for group leaders and testing).
 
 ## How it's built
