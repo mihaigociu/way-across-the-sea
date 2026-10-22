@@ -1,0 +1,26 @@
+// Dev helper: the chapters menu, closed / opened by hover / opened by tap.
+import { chromium, devices } from '@playwright/test';
+const out = process.argv[2];
+const url = 'http://localhost:4322/way-across-the-sea/';
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+const errs = [];
+p.on('pageerror', (e) => errs.push(e.message));
+await p.goto(url); await p.waitForTimeout(1200);
+await p.screenshot({ path: `${out}/menu-closed.png` });
+await p.hover('.menu-btn'); await p.waitForTimeout(400);
+await p.screenshot({ path: `${out}/menu-hover.png` });
+await p.hover('.menu .play:last-child'); await p.waitForTimeout(500);
+console.log('still open when moving down into it:', !!(await p.$('.menu')));
+await p.mouse.move(800, 500); await p.waitForTimeout(600);
+console.log('closed after leaving:', !(await p.$('.menu')));
+const t = await b.newPage({ ...devices['iPad Mini'] });
+t.on('pageerror', (e) => errs.push(e.message));
+await t.goto(url); await t.waitForTimeout(1200);
+await t.tap('.menu-btn'); await t.waitForTimeout(400);
+console.log('tap opens:', !!(await t.$('.menu')));
+await t.screenshot({ path: `${out}/menu-tap.png` });
+await t.tap('.menu .play:nth-child(1)'); await t.waitForTimeout(800);
+console.log('tap on an item starts it:', !!(await t.$('.card')));
+console.log('errors:', errs);
+await b.close();

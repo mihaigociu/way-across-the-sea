@@ -15,7 +15,7 @@ await p.reload(); await p.waitForTimeout(1200);
 
 // picks: question index → city id to click; wrong: index of an mc question answered wrongly
 async function play(quiz, n, picks, wrong) {
-  await p.click(`text=${quiz.title.en}`); await p.waitForTimeout(600);
+  await p.hover(".menu-btn"); await p.click(`.menu >> text=${quiz.title.en}`); await p.waitForTimeout(600);
   await p.screenshot({ path: `${out}/q${n}-0-intro.png` });
   await p.click('.quiz button:has-text("Start")');
   for (const [i, q] of quiz.questions.entries()) {

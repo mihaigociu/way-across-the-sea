@@ -11,7 +11,7 @@ await p.goto('http://localhost:4322/way-across-the-sea/?all');
 await p.waitForTimeout(1200);
 if (lang === 'ro') await p.click('.controls button:first-child');
 await p.screenshot({ path: `${out}/00-menu.png` });
-await p.click('.start .play:nth-child(4)');
+await p.hover('.menu-btn'); await p.click('.menu .play:nth-child(4)');
 for (let i = 1; ; i++) {
   await p.waitForSelector('.card', { timeout: 20000 });
   await p.waitForTimeout(1700);

@@ -7,7 +7,7 @@ const errs = [];
 p.on('pageerror', (e) => errs.push(e.message));
 const card = () => p.$eval('.card .step', (e) => e.textContent).catch(() => '(no card)');
 await p.goto(url); await p.waitForTimeout(1000);
-await p.click('.start .play:nth-child(4)'); // second journey
+await p.hover('.menu-btn'); await p.click('.menu .play:nth-child(4)'); // second journey
 for (let i = 0; i < 13; i++) {
   await p.waitForSelector('.card', { timeout: 20000 }); await p.waitForTimeout(150);
   if (await p.$('.choice .opt')) await p.click('.choice .opt');
@@ -21,7 +21,7 @@ await p.screenshot({ path: process.argv[2] });
 await p.click('.card .buttons button.ghost'); await p.waitForTimeout(300);
 await p.reload(); await p.waitForTimeout(1500);
 console.log('after Close + refresh:', await card());
-await p.click('.start .play:nth-child(1)'); await p.waitForTimeout(500);
+await p.hover('.menu-btn'); await p.click('.menu .play:nth-child(1)'); await p.waitForTimeout(500);
 await p.click('.card .buttons button:last-child'); await p.waitForTimeout(500);
 await p.click('.card .buttons button:last-child'); await p.waitForTimeout(500);
 await p.reload(); await p.waitForTimeout(1500);

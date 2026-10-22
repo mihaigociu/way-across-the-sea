@@ -52,8 +52,8 @@
   // ---------- UI state ----------
   let lang = $state('en');
   const T = {
-    en: { play: "Paul's First Journey", next: 'Next', back: 'Back', exit: 'Close', reset: 'Whole map', locked: 'Pass the first quiz to unlock', note: 'What historians say', lamps: 'Christian communities', lanes: 'Sea lanes', empire: 'Roman Empire (c. AD 46)', step: 'Stop', of: 'of', modern: 'Today', finish: 'Finish' },
-    ro: { play: 'Prima călătorie a lui Pavel', next: 'Înainte', back: 'Înapoi', exit: 'Închide', reset: 'Toată harta', locked: 'Treci primul test ca să deblochezi', note: 'Ce spun istoricii', lamps: 'Comunități creștine', lanes: 'Rute pe mare', empire: 'Imperiul Roman (cca. 46 d.Hr.)', step: 'Oprirea', of: 'din', modern: 'Astăzi', finish: 'Gata' },
+    en: { play: "Paul's First Journey", next: 'Next', back: 'Back', exit: 'Close', reset: 'Whole map', chapters: 'Chapters', nextUp: 'Next', allDone: 'All chapters done ★', locked: 'Pass the first quiz to unlock', note: 'What historians say', lamps: 'Christian communities', lanes: 'Sea lanes', empire: 'Roman Empire (c. AD 46)', step: 'Stop', of: 'of', modern: 'Today', finish: 'Finish' },
+    ro: { play: 'Prima călătorie a lui Pavel', next: 'Înainte', back: 'Înapoi', exit: 'Închide', reset: 'Toată harta', chapters: 'Capitole', nextUp: 'Urmează', allDone: 'Toate capitolele, gata ★', locked: 'Treci primul test ca să deblochezi', note: 'Ce spun istoricii', lamps: 'Comunități creștine', lanes: 'Rute pe mare', empire: 'Imperiul Roman (cca. 46 d.Hr.)', step: 'Oprirea', of: 'din', modern: 'Astăzi', finish: 'Gata' },
   };
   let t = $derived(T[lang]);
 
@@ -229,6 +229,18 @@
     if (f) focusLeg(f);
   }
 
+  // ---------- the chapters menu: opens on hover (mouse) or tap (touch) ----------
+  let menuOpen = $state(false);
+  let menuPointer = 'mouse';
+  let menuTimer;
+  function openMenu() {
+    clearTimeout(menuTimer);
+    menuOpen = true;
+  }
+  const closeMenuSoon = () => (menuTimer = setTimeout(() => (menuOpen = false), 300));
+  // Shown on the closed menu: the journey whose quiz hasn't been passed yet.
+  let nextUp = $derived(journeys.find((j) => j.quiz && !progress[j.quiz]?.passed));
+
   // ---------- where the player is, and the language (kept across a page refresh) ----------
   const PLACE_KEY = 'waysea.place';
   let ready = $state(false); // don't overwrite the saved place before it has been restored
@@ -316,6 +328,7 @@
     pickQ = null;
   }
   function onMapClick(e) {
+    menuOpen = false;
     if (!picking || !pickResolve) return;
     // screen → SVG viewBox → map coordinates (undo the zoom) → lon/lat
     const pt = svgEl.createSVGPoint();
@@ -651,7 +664,18 @@
   </nav>
 
   {#if !journey && !story && !quizOpen}
-    <div class="start">
+    <div class="start" onpointerenter={(e) => e.pointerType === 'mouse' && openMenu()}
+         onpointerleave={(e) => e.pointerType === 'mouse' && closeMenuSoon()}>
+      <button class="play menu-btn" class:open={menuOpen} aria-expanded={menuOpen}
+              onpointerdown={(e) => (menuPointer = e.pointerType)}
+              onclick={() => (menuPointer === 'mouse' ? openMenu() : (menuOpen = !menuOpen))}>
+        <span class="icon">☰</span>
+        <span><b>{t.chapters}</b><small>{nextUp ? `${t.nextUp}: ${nextUp.title[lang]}` : t.allDone}</small></span>
+        <span class="caret">▾</span>
+      </button>
+      {#if menuOpen}
+      <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+      <div class="menu" onclick={() => (menuOpen = false)}>
       <button class="play" onclick={startStory}>
         <span class="icon">📜</span>
         <span><b>{intro.title[lang]}</b><small>{intro.years[lang]}</small></span>
@@ -673,6 +697,8 @@
           </button>
         {/if}
       {/each}
+      </div>
+      {/if}
     </div>
   {/if}
 
@@ -816,7 +842,12 @@
   }
   button:hover { background: #f7ecd0; }
   .controls button { min-width: 38px; }
-  .start { position: absolute; top: 16px; left: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .start { position: absolute; top: 16px; left: 16px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .menu { align-self: stretch; display: flex; flex-direction: column; gap: 8px; animation: drop 0.18s ease-out; transform-origin: top; }
+  .menu-btn .caret { margin-left: auto; padding-left: 10px; font-size: 14px; transition: transform 0.2s; }
+  .menu-btn.open .caret { transform: rotate(180deg); }
+  .menu-btn .icon { font-size: 20px; }
+  @keyframes drop { from { transform: scaleY(0.7) translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
   .play { display: flex; align-items: center; gap: 12px; padding: 10px 18px; text-align: left; }
   .play .icon { font-size: 22px; color: #8b1e1e; }
   .play b { display: block; font-family: 'Cinzel', serif; font-size: 17px; }
@@ -879,5 +910,5 @@
   .tip b { font-family: 'Cinzel', serif; font-size: 15px; }
   .tip small { font-style: italic; color: #6a5038; }
   @keyframes unroll { from { transform: scaleY(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { .flame, .pulse, .halo.new, .card { animation: none; } .arrow path, .arrow .head, .arrow-l { animation-duration: 0.01s; animation-delay: 0s; } }
+  @media (prefers-reduced-motion: reduce) { .flame, .pulse, .halo.new, .card, .menu { animation: none; } .arrow path, .arrow .head, .arrow-l { animation-duration: 0.01s; animation-delay: 0s; } }
 </style>
