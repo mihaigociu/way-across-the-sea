@@ -18,10 +18,10 @@ for (let i = 1; ; i++) {
   const opt = await p.$('.choice .opt');
   if (opt) { await p.click(`.choice .opt:nth-of-type(${i % 2 ? 1 : 2})`); await p.waitForTimeout(300); }
   const note = await p.$('.note summary');
-  if (note) await note.click();
+  if (note && !process.env.NONOTE) await note.click();
   await p.screenshot({ path: `${out}/${String(i).padStart(2, '0')}.png` });
-  const last = await p.$$eval('.card .buttons button', (bs) => bs.at(-1).textContent);
-  if (/Finish|Gata/.test(last)) break;
+  const labels = await p.$$eval('.card .buttons button', (bs) => bs.map((x) => x.textContent).join(' '));
+  if (/Finish|Gata/.test(labels)) break;
   await p.click('.card .buttons button:last-child');
 }
 console.log('errors:', errs);

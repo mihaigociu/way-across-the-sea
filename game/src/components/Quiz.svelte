@@ -177,46 +177,46 @@
 
 <style>
   .quiz {
-    position: absolute; right: 24px; top: 72px; width: min(460px, calc(100vw - 48px)); max-height: calc(100vh - 110px); overflow: auto;
-    padding: 18px 22px; background: #f1e3be; border: 2px solid #5c4630; outline: 1px solid #5c4630; outline-offset: 4px;
+    position: absolute; right: 24px; top: 72px; width: min(520px, calc(100vw - 48px)); max-height: calc(100vh - 110px); overflow: auto;
+    padding: 20px 26px; background: #f1e3be; border: 2px solid #5c4630; outline: 1px solid #5c4630; outline-offset: 4px;
     box-shadow: 0 10px 30px rgba(60, 35, 10, 0.4); border-radius: 3px; animation: unroll 0.35s ease-out; box-sizing: border-box;
   }
-  .quiz.slim { width: min(380px, calc(100vw - 48px)); }
-  .kicker { font-size: 14px; font-style: italic; color: #7a5636; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .quiz.slim { width: min(440px, calc(100vw - 48px)); }
+  .kicker { font-size: 15.5px; font-style: italic; color: #7a5636; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
   .dots { display: inline-flex; gap: 4px; }
   .dots i { width: 8px; height: 8px; border-radius: 50%; border: 1px solid #7a5636; }
   .dots i.done { background: #7a5636; }
   .dots i.now { background: #c98a2b; border-color: #8b4a12; }
-  h2 { font-family: 'IM Fell English', Georgia, serif; font-weight: normal; font-size: 22px; line-height: 1.3; color: #6e2a17; margin: 8px 0 12px; }
-  .voice { font-style: italic; font-size: 18px; line-height: 1.45; }
-  p { font-size: 17px; line-height: 1.45; margin: 8px 0; }
+  h2 { font-family: 'IM Fell English', Georgia, serif; font-weight: normal; font-size: 25px; line-height: 1.3; color: #6e2a17; margin: 8px 0 12px; }
+  .voice { font-style: italic; font-size: 20.5px; line-height: 1.45; }
+  p { font-size: 19.5px; line-height: 1.45; margin: 8px 0; }
   .options { display: flex; flex-direction: column; gap: 8px; }
-  button { font-family: 'IM Fell English', Georgia, serif; font-size: 16px; color: #3e2414; cursor: pointer; background: #efe0b9;
+  button { font-family: 'IM Fell English', Georgia, serif; font-size: 18px; color: #3e2414; cursor: pointer; background: #efe0b9;
     border: 1.5px solid #5c4630; border-radius: 4px; padding: 6px 12px; box-shadow: 0 2px 6px rgba(60, 35, 10, 0.25); }
   button:hover:not(:disabled) { background: #f7ecd0; }
   button:disabled { cursor: default; }
-  .opt { text-align: left; font-size: 17px; padding: 9px 14px; }
+  .opt { text-align: left; font-size: 19.5px; padding: 10px 15px; }
   .opt:disabled:not(.right):not(.wrong) { opacity: 0.55; }
   .right { background: #d9e6bf !important; border-color: #4f7a2a !important; }
   .wrong { background: #f0c9b8 !important; border-color: #9a3a22 !important; }
-  .hint { font-style: italic; color: #6a5038; margin: 6px 0; font-size: 16px; }
+  .hint { font-style: italic; color: #6a5038; margin: 6px 0; font-size: 18px; }
   .pool { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-  .chip { font-size: 15px; }
+  .chip { font-size: 17.5px; }
   .chip.used { opacity: 0.3; }
   .slots { list-style: none; padding: 0; margin: 6px 0; display: flex; flex-direction: column; gap: 5px; min-height: 10px; }
-  .placed { width: 100%; text-align: left; display: flex; gap: 10px; align-items: center; font-size: 16px; }
+  .placed { width: 100%; text-align: left; display: flex; gap: 10px; align-items: center; font-size: 18.5px; }
   .num { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #6e2a17; color: #f1e3be; font-size: 13px; flex: none; }
   .feedback { margin-top: 12px; padding: 10px 12px; border-left: 4px solid #9a3a22; background: rgba(154, 58, 34, 0.08); display: flex; flex-direction: column; gap: 3px; }
   .feedback.ok { border-color: #4f7a2a; background: rgba(79, 122, 42, 0.1); }
   .feedback b { font-family: 'Cinzel', serif; }
-  .feedback .voice { font-size: 16px; }
+  .feedback .voice { font-size: 18px; }
   .buttons { display: flex; justify-content: space-between; margin-top: 12px; }
   .ghost { background: transparent; box-shadow: none; }
   .result { text-align: center; margin: 10px 0; }
-  .score { font-size: 18px; }
+  .score { font-size: 20px; }
   .stars { font-size: 40px; letter-spacing: 6px; color: #d8c9a3; }
   .stars .on { color: #d39a1e; text-shadow: 0 0 8px rgba(255, 200, 70, 0.7); }
-  .rank { font-size: 18px; }
+  .rank { font-size: 20px; }
   .rank b { font-family: 'Cinzel', serif; color: #6e2a17; }
   .pulse-text { animation: breathe 1.4s infinite alternate; }
   @keyframes breathe { from { opacity: 0.55; } to { opacity: 1; } }

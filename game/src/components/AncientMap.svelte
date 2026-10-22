@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { select } from 'd3-selection';
   import { zoom, zoomIdentity } from 'd3-zoom';
   import 'd3-transition';
@@ -212,7 +212,12 @@
     arrows = legArrows(leg);
     journey = { ...journey, phase: 'card', f: 1, lamp };
   }
-  const choose = (n) => journey && (journey = { ...journey, chosen: n });
+  // After a choice, scroll the card down to the reply and the Next button (long cards scroll).
+  function choose(n) {
+    if (!journey) return;
+    journey = { ...journey, chosen: n };
+    tick().then(() => document.querySelector('.card .buttons')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+  }
 
   // Open a journey straight at a given stop (after a page refresh): lamps, route and year as if travelled.
   function resumeJourney(j, step) {
@@ -353,7 +358,7 @@
     const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
     const kk = Math.min(8, 0.62 / Math.max((x1 - x0) / W, (y1 - y0) / H));
     // Shift the focus a little left/up, leaving room for the story card on the right.
-    const cx = (x0 + x1) / 2 + (W * 0.14) / kk, cy = (y0 + y1) / 2 + (H * 0.04) / kk;
+    const cx = (x0 + x1) / 2 + (W * 0.16) / kk, cy = (y0 + y1) / 2 + (H * 0.04) / kk;
     // Keep the map covering the whole view (programmatic transforms skip d3-zoom's own constraint).
     const tx = Math.min(0, Math.max(W - kk * W, W / 2 - kk * cx));
     const ty = Math.min(0, Math.max(H - kk * H, H / 2 - kk * cy));
@@ -858,16 +863,17 @@
   .sw.lane { border-top: 2px dotted #5d7178; height: 0; }
   .sw.lamp { width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(#fff6c8, #ffc846 50%, transparent 72%); margin: 0 13px 0 5px; }
   .card {
-    position: absolute; right: 24px; top: 72px; width: min(380px, calc(100vw - 48px)); padding: 18px 22px;
+    position: absolute; right: 24px; top: 72px; width: min(440px, calc(100vw - 48px)); padding: 20px 26px;
     background: #f1e3be; border: 2px solid #5c4630; outline: 1px solid #5c4630; outline-offset: 4px;
     box-shadow: 0 10px 30px rgba(60, 35, 10, 0.4); border-radius: 3px; animation: unroll 0.35s ease-out;
   }
-  .card .step { font-size: 13px; font-style: italic; color: #7a5636; }
-  .card h2 { font-family: 'Cinzel', serif; margin: 2px 0 0; font-size: 24px; color: #6e2a17; }
-  .card .sub { font-size: 14px; font-style: italic; color: #6a5038; }
-  .card p { font-size: 18px; line-height: 1.45; margin: 12px 0 14px; }
-  .card .lit { margin-top: 8px; font-size: 15px; color: #8b4a12; }
+  .card .step { font-size: 14px; font-style: italic; color: #7a5636; }
+  .card h2 { font-family: 'Cinzel', serif; margin: 2px 0 0; font-size: 27px; color: #6e2a17; }
+  .card .sub { font-size: 15.5px; font-style: italic; color: #6a5038; }
+  .card p { font-size: 20.5px; line-height: 1.45; margin: 12px 0 14px; }
+  .card .lit { margin-top: 8px; font-size: 17px; color: #8b4a12; }
   .card .buttons { display: flex; justify-content: space-between; }
+  .card .buttons button { font-size: 18px; padding: 7px 14px; }
   .card .ghost { background: transparent; box-shadow: none; }
   .card p.narrator { font-style: italic; }
   svg.picking { cursor: crosshair; }
@@ -877,15 +883,15 @@
   .cartouche .rank { font-size: 14px; color: #8b4a12; margin-top: 2px; }
   .card.left { right: auto; left: 24px; }
   .card { max-height: calc(100vh - 110px); overflow: auto; box-sizing: border-box; }
-  .card h3 { font-family: 'IM Fell English', Georgia, serif; font-style: italic; font-weight: normal; font-size: 20px; color: #6e2a17; margin: 10px 0 0; }
+  .card h3 { font-family: 'IM Fell English', Georgia, serif; font-style: italic; font-weight: normal; font-size: 23px; color: #6e2a17; margin: 10px 0 0; }
   .card h3 + .lit, .card h3 + p { margin-top: 6px; }
   .choice { border-top: 1px solid rgba(92, 70, 48, 0.4); padding-top: 10px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 7px; }
-  .choice .q { font-style: italic; font-size: 17px; color: #6e2a17; }
-  .choice .opt { text-align: left; font-size: 16px; }
+  .choice .q { font-style: italic; font-size: 19.5px; color: #6e2a17; }
+  .choice .opt { text-align: left; font-size: 18.5px; padding: 8px 14px; }
   .choice .opt:disabled { cursor: default; opacity: 0.5; }
   .choice .opt.picked { opacity: 1; background: #e6d29f; border-color: #8b4a12; }
   .choice p.reply { margin: 6px 0 0; }
-  .note { font-size: 15px; line-height: 1.4; color: #4e3a26; background: rgba(92, 70, 48, 0.07); border-left: 3px solid #b39466; padding: 6px 10px; margin-bottom: 14px; }
+  .note { font-size: 17px; line-height: 1.4; color: #4e3a26; background: rgba(92, 70, 48, 0.07); border-left: 3px solid #b39466; padding: 6px 10px; margin-bottom: 14px; }
   .note summary { cursor: pointer; font-style: italic; color: #7a5636; }
   .note[open] summary { margin-bottom: 4px; }
   .play.locked { opacity: 0.6; cursor: default; }
