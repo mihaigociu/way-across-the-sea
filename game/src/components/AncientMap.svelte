@@ -12,9 +12,11 @@
     cities, seaLanes, empire, regions, seas, mountains, details, paulFirstJourney, litAtStart,
   } from '../data/world.js';
   import { paulSecondJourney } from '../data/journey2.js';
+  import { paulThirdJourney } from '../data/journey3.js';
   import { intro } from '../data/intro.js';
   import { quiz1 } from '../data/quiz1.js';
   import { quiz2 } from '../data/quiz2.js';
+  import { quiz3 } from '../data/quiz3.js';
   import Quiz from './Quiz.svelte';
 
   // ---------- static geometry (projected once) ----------
@@ -52,8 +54,8 @@
   // ---------- UI state ----------
   let lang = $state('en');
   const T = {
-    en: { play: "Paul's First Journey", next: 'Next', back: 'Back', exit: 'Close', reset: 'Whole map', chapters: 'Chapters', nextUp: 'Next', allDone: 'All chapters done ★', locked: 'Pass the first quiz to unlock', note: 'What historians say', lamps: 'Christian communities', lanes: 'Sea lanes', empire: 'Roman Empire (c. AD 46)', step: 'Stop', of: 'of', modern: 'Today', finish: 'Finish' },
-    ro: { play: 'Prima călătorie a lui Pavel', next: 'Înainte', back: 'Înapoi', exit: 'Închide', reset: 'Toată harta', chapters: 'Capitole', nextUp: 'Urmează', allDone: 'Toate capitolele, gata ★', locked: 'Treci primul test ca să deblochezi', note: 'Ce spun istoricii', lamps: 'Comunități creștine', lanes: 'Rute pe mare', empire: 'Imperiul Roman (cca. 46 d.Hr.)', step: 'Oprirea', of: 'din', modern: 'Astăzi', finish: 'Gata' },
+    en: { play: "Paul's First Journey", next: 'Next', back: 'Back', exit: 'Close', reset: 'Whole map', chapters: 'Chapters', nextUp: 'Next', allDone: 'All chapters done ★', locked: 'Pass the quiz before it to unlock', note: 'What historians say', lamps: 'Christian communities', lanes: 'Sea lanes', empire: 'Roman Empire (c. AD 46)', step: 'Stop', of: 'of', modern: 'Today', finish: 'Finish' },
+    ro: { play: 'Prima călătorie a lui Pavel', next: 'Înainte', back: 'Înapoi', exit: 'Închide', reset: 'Toată harta', chapters: 'Capitole', nextUp: 'Urmează', allDone: 'Toate capitolele, gata ★', locked: 'Treci testul de dinainte ca să deblochezi', note: 'Ce spun istoricii', lamps: 'Comunități creștine', lanes: 'Rute pe mare', empire: 'Imperiul Roman (cca. 46 d.Hr.)', step: 'Oprirea', of: 'din', modern: 'Astăzi', finish: 'Gata' },
   };
   let t = $derived(T[lang]);
 
@@ -144,7 +146,7 @@
   };
 
   // ---------- journeys ----------
-  const journeys = [paulFirstJourney, paulSecondJourney];
+  const journeys = [paulFirstJourney, paulSecondJourney, paulThirdJourney];
   let J = $state.raw(paulFirstJourney);
   let journey = $state(null); // { step, phase: 'moving'|'card', f, lamp, chosen }
   let legSamples = [];
@@ -204,10 +206,11 @@
   }
   function arrive() {
     const leg = J.legs[journey.step];
-    const lamp = J.lamps.includes(leg.to) && !lit.has(leg.to);
+    const fresh = [leg.to, ...(leg.light ?? [])].filter((id) => J.lamps.includes(id) && !lit.has(id));
+    const lamp = fresh.length > 0;
     if (lamp) {
-      lit = new Set([...lit, leg.to]);
-      newlyLit = new Set([...newlyLit, leg.to]);
+      lit = new Set([...lit, ...fresh]);
+      newlyLit = new Set([...newlyLit, ...fresh]);
     }
     arrows = legArrows(leg);
     journey = { ...journey, phase: 'card', f: 1, lamp };
@@ -225,7 +228,7 @@
     step = Math.min(step, J.legs.length - 1);
     if (step <= 0) return;
     const legs = J.legs.slice(0, step + 1);
-    lit = new Set([...litBefore(J), ...legs.map((l) => l.to).filter((id) => J.lamps.includes(id))]);
+    lit = new Set([...litBefore(J), ...legs.flatMap((l) => [l.to, ...(l.light ?? [])]).filter((id) => J.lamps.includes(id))]);
     drawn = legSamples.slice(1, step + 1).filter(Boolean).map((l) => ({ mode: l.mode, pts: l.pts }));
     year = legs.findLast((l) => l.year)?.year ?? J.years;
     arrows = legArrows(J.legs[step]);
@@ -275,11 +278,11 @@
 
   // ---------- quiz ----------
   const PROGRESS_KEY = 'waysea.progress';
-  const quizzes = { quiz1, quiz2 };
+  const quizzes = { quiz1, quiz2, quiz3 };
   let quizOpen = $state(false);
   let Q = $state.raw(quiz1); // the open quiz
   // The highest rank earned so far, shown in the cartouche.
-  let topRank = $derived([quiz2, quiz1].find((q) => progress[q.id]?.passed));
+  let topRank = $derived([quiz3, quiz2, quiz1].find((q) => progress[q.id]?.passed));
   let progress = $state({});
   let picking = $state(false); // a map question is waiting for a click: names are hidden
   let pickMark = $state(null); // { click: [x, y], target: [x, y], r, ok }
@@ -450,7 +453,7 @@
   };
   const ptsAttr = (pts) => pts.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
   const showLabel = (c) =>
-    c.tier <= 2 || k >= 2.2 || (journey && J.legs.some((l) => l.to === c.id));
+    c.tier <= 2 || k >= 2.2 || (journey && J.legs.some((l) => l.to === c.id || l.light?.includes(c.id)));
   let leg = $derived(journey ? J.legs[journey.step] : null);
   let legCity = $derived(leg ? city[leg.to] : null);
 </script>
