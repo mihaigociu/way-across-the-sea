@@ -7,6 +7,7 @@
 //   light   — city ids whose lamp is lit at this step
 //   arrows  — [{ from, to, label, style }]; from/to are city ids or [lon, lat];
 //             style: 'spread' (solid, animated) | 'tradition' (dotted)
+//   note    — optional "What historians say" fold-out, as on the journey cards
 
 const JERUSALEM = 'hierosolyma';
 
@@ -26,8 +27,12 @@ export const intro = {
       place: { en: 'Galilee and Jerusalem', ro: 'Galileea și Ierusalim' },
       year: { en: 'c. AD 30', ro: 'cca. 30 d.Hr.' },
       focus: ['capernaum', JERUSALEM, 'caesarea'],
-      en: "\"I saw him once, at Passover in Jerusalem: Jesus of Nazareth. He healed the sick, ate with the poor, and told us that God is our Father and loves every one of us. Crowds followed him everywhere. But our leaders and elders handed him over to the Romans to be crucified. We thought it was all over. His friends hid, full of fear.\"",
-      ro: "„L-am văzut o dată, de Paști, la Ierusalim: Iisus din Nazaret. Îi vindeca pe bolnavi, mânca împreună cu cei săraci și ne spunea că Dumnezeu este Tatăl nostru și ne iubește pe fiecare. Mulțimile Îl urmau peste tot. Dar mai-marii și bătrânii noștri L-au dat în mâinile romanilor, ca să fie răstignit. Credeam că totul s-a sfârșit. Prietenii Lui s-au ascuns, plini de frică.”",
+      en: "\"I saw him once, at Passover in Jerusalem: Jesus of Nazareth. He healed the sick, ate with the poor, with tax collectors and sinners whom others called unclean, and proclaimed: 'The Kingdom of God has come near!' Then, at Bethany, he raised Lazarus, who had been dead for four days, and many believed in him. But the chief priests and the Pharisees met in council: 'What are we to do? This man performs many signs. If we let him go on like this, everyone will believe in him!' And from that day on they planned to kill him. They handed him over to the Romans to be crucified. We thought it was all over. His friends hid, full of fear.\"",
+      ro: "„L-am văzut o dată, de Paști, la Ierusalim: Iisus din Nazaret. Îi vindeca pe bolnavi, mânca împreună cu cei săraci, cu vameșii și cu păcătoșii, pe care alții îi socoteau necurați, și propovăduia: «S-a apropiat Împărăția lui Dumnezeu!» Apoi, la Betania, l-a înviat pe Lazăr, care era mort de patru zile, și mulți au crezut în El. Dar arhiereii și fariseii s-au adunat în sfat: «Ce facem? Omul acesta face multe minuni. Dacă-L lăsăm așa, toți vor crede în El!» Și din ziua aceea au hotărât să-L omoare. L-au dat în mâinile romanilor, ca să fie răstignit. Credeam că totul s-a sfârșit. Prietenii Lui s-au ascuns, plini de frică.”",
+      note: {
+        en: "The raising of Lazarus is told only in the Gospel of John (chapter 11). There it is the event that leads straight to the decision to put Jesus to death.",
+        ro: "Învierea lui Lazăr este povestită doar în Evanghelia după Ioan (capitolul 11). Acolo, ea este chiar pricina care duce la hotărârea de a-L omorî pe Iisus.",
+      },
     },
     {
       place: { en: 'The empty tomb', ro: 'Mormântul gol' },

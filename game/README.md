@@ -27,6 +27,8 @@ Add `?all` to open every chapter without passing the quizzes (for group leaders 
 | `src/data/quiz2.js` | Quiz gate 2, on the second journey |
 | `src/data/journey3.js` | Paul's third journey: Ephesus, the letters, the collection for Jerusalem, Miletus, Caesarea |
 | `src/data/quiz3.js` | Quiz gate 3, on the third journey |
+| `src/data/journey4.js` | The voyage to Rome: the arrest, Caesarea, the storm and the shipwreck on Malta, Rome |
+| `src/data/quiz4.js` | Quiz gate 4, on the voyage to Rome |
 | `src/data/quiz1.js` | Quiz gate 1: questions (EN/RO), answers, explanations, the children's feedback lines |
 | `src/components/Quiz.svelte` | The quiz player (multiple choice, ordering, map questions) |
 | `src/data/world.js` | Historical data: cities, sea lanes, the empire's extent (c. AD 46), regions, seas, mountains, and the journey (bilingual) |

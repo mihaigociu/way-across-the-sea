@@ -13,10 +13,12 @@
   } from '../data/world.js';
   import { paulSecondJourney } from '../data/journey2.js';
   import { paulThirdJourney } from '../data/journey3.js';
+  import { paulVoyageToRome } from '../data/journey4.js';
   import { intro } from '../data/intro.js';
   import { quiz1 } from '../data/quiz1.js';
   import { quiz2 } from '../data/quiz2.js';
   import { quiz3 } from '../data/quiz3.js';
+  import { quiz4 } from '../data/quiz4.js';
   import Quiz from './Quiz.svelte';
 
   // ---------- static geometry (projected once) ----------
@@ -146,7 +148,7 @@
   };
 
   // ---------- journeys ----------
-  const journeys = [paulFirstJourney, paulSecondJourney, paulThirdJourney];
+  const journeys = [paulFirstJourney, paulSecondJourney, paulThirdJourney, paulVoyageToRome];
   let J = $state.raw(paulFirstJourney);
   let journey = $state(null); // { step, phase: 'moving'|'card', f, lamp, chosen }
   let legSamples = [];
@@ -206,7 +208,7 @@
   }
   function arrive() {
     const leg = J.legs[journey.step];
-    const fresh = [leg.to, ...(leg.light ?? [])].filter((id) => J.lamps.includes(id) && !lit.has(id));
+    const fresh = [...(leg.dark ? [] : [leg.to]), ...(leg.light ?? [])].filter((id) => J.lamps.includes(id) && !lit.has(id));
     const lamp = fresh.length > 0;
     if (lamp) {
       lit = new Set([...lit, ...fresh]);
@@ -228,7 +230,7 @@
     step = Math.min(step, J.legs.length - 1);
     if (step <= 0) return;
     const legs = J.legs.slice(0, step + 1);
-    lit = new Set([...litBefore(J), ...legs.flatMap((l) => [l.to, ...(l.light ?? [])]).filter((id) => J.lamps.includes(id))]);
+    lit = new Set([...litBefore(J), ...legs.flatMap((l) => [...(l.dark ? [] : [l.to]), ...(l.light ?? [])]).filter((id) => J.lamps.includes(id))]);
     drawn = legSamples.slice(1, step + 1).filter(Boolean).map((l) => ({ mode: l.mode, pts: l.pts }));
     year = legs.findLast((l) => l.year)?.year ?? J.years;
     arrows = legArrows(J.legs[step]);
@@ -278,11 +280,11 @@
 
   // ---------- quiz ----------
   const PROGRESS_KEY = 'waysea.progress';
-  const quizzes = { quiz1, quiz2, quiz3 };
+  const quizzes = { quiz1, quiz2, quiz3, quiz4 };
   let quizOpen = $state(false);
   let Q = $state.raw(quiz1); // the open quiz
   // The highest rank earned so far, shown in the cartouche.
-  let topRank = $derived([quiz3, quiz2, quiz1].find((q) => progress[q.id]?.passed));
+  let topRank = $derived([quiz4, quiz3, quiz2, quiz1].find((q) => progress[q.id]?.passed));
   let progress = $state({});
   let picking = $state(false); // a map question is waiting for a click: names are hidden
   let pickMark = $state(null); // { click: [x, y], target: [x, y], r, ok }
@@ -545,12 +547,15 @@
       <!-- small names: Holy Land waters, regions and mountains; the great rivers -->
       {#each details as d}
         {@const p = project(d.at)}
+        {@const glyph = d.kind === 'mount' || d.kind === 'town'}
         <g class="detail {d.kind}" transform="translate({p[0]},{p[1]}) scale({labelScale})" opacity={k >= d.minK && !picking ? 1 : 0}>
           {#if d.kind === 'mount'}
             <path d="M-5 3 L0 -5 L5 3 Z" fill="#cdb284" stroke="#6b4c2e" stroke-width="0.9" />
+          {:else if d.kind === 'town'}
+            <circle r="2.2" fill="#3e2a1a" />
           {/if}
-          <text transform="rotate({d.rot ?? 0})" x={d.kind === 'mount' ? (d.anchor === 'end' ? -7 : 7) : 0} y={d.kind === 'mount' ? 4 : 0}
-                text-anchor={d.anchor ?? (d.kind === 'mount' ? 'start' : 'middle')}>{d.la ?? d.name[lang]}</text>
+          <text transform="rotate({d.rot ?? 0})" x={glyph ? (d.anchor === 'end' ? -7 : 7) : 0} y={glyph ? 4 : 0}
+                text-anchor={d.anchor ?? (glyph ? 'start' : 'middle')}>{d.la ?? d.name[lang]}</text>
         </g>
       {/each}
 
@@ -729,6 +734,9 @@
             : (lang === 'en' ? 'New lamps are lit!' : 'Se aprind candele noi!')}</div>
         {/if}
         <p class:narrator={s.narrator}>{s[lang]}</p>
+        {#if s.note}
+          <details class="note"><summary>📜 {t.note}</summary>{s.note[lang]}</details>
+        {/if}
         <div class="buttons">
           {#if story.step > 0}
             <button class="ghost" onclick={() => storyGo(story.step - 1)}>◀ {t.back}</button>
@@ -818,6 +826,7 @@
   .detail.water text { font-style: italic; font-size: 12px; fill: #2f5560; stroke: #c3cdb2; stroke-width: 3px; letter-spacing: 0.08em; }
   .detail.river text { font-style: italic; font-size: 12px; fill: #3e6670; stroke: #ecdcb3; stroke-width: 3px; letter-spacing: 0.12em; }
   .detail.region text { font-family: 'Cinzel', serif; font-size: 12px; fill: #7a5636; fill-opacity: 0.8; letter-spacing: 0.3em; }
+  .detail.town text { font-size: 11px; fill: #3e2a1a; stroke: #ecdcb3; stroke-width: 3px; }
   .detail.mount text { font-size: 11px; font-style: italic; fill: #5c4630; stroke: #ecdcb3; stroke-width: 3px; }
   .label { font-size: 13px; fill: #2f1b0e; paint-order: stroke; stroke: #ecdcb3; stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
   .label.big { font-family: 'Cinzel', serif; font-weight: 600; font-size: 15px; }
@@ -885,7 +894,7 @@
   .pick .mark.ok { stroke: #3f6d1f; }
   .cartouche .rank { font-size: 14px; color: #8b4a12; margin-top: 2px; }
   .card.left { right: auto; left: 24px; }
-  .card { max-height: calc(100vh - 110px); overflow: auto; box-sizing: border-box; }
+  .card { max-height: calc(100vh - 110px); overflow: auto; box-sizing: border-box; z-index: 2; } /* above the legend */
   .card h3 { font-family: 'IM Fell English', Georgia, serif; font-style: italic; font-weight: normal; font-size: 23px; color: #6e2a17; margin: 10px 0 0; }
   .card h3 + .lit, .card h3 + p { margin-top: 6px; }
   .choice { border-top: 1px solid rgba(92, 70, 48, 0.4); padding-top: 10px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 7px; }

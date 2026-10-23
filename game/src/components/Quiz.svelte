@@ -177,7 +177,7 @@
 
 <style>
   .quiz {
-    position: absolute; right: 24px; top: 72px; width: min(520px, calc(100vw - 48px)); max-height: calc(100vh - 110px); overflow: auto;
+    position: absolute; right: 24px; top: 72px; width: min(520px, calc(100vw - 48px)); max-height: calc(100vh - 110px); overflow: auto; z-index: 2;
     padding: 20px 26px; background: #f1e3be; border: 2px solid #5c4630; outline: 1px solid #5c4630; outline-offset: 4px;
     box-shadow: 0 10px 30px rgba(60, 35, 10, 0.4); border-radius: 3px; animation: unroll 0.35s ease-out; box-sizing: border-box;
   }

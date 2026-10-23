@@ -1,10 +1,11 @@
 // Dev helper: plays quiz 1 end to end (one deliberate mistake), which unlocks the second journey,
-// then quiz 2 and quiz 3 the same way, taking screenshots along the way.
+// then quizzes 2, 3 and 4 the same way, taking screenshots along the way.
 // Usage: node shot-quiz.mjs <outDir> [url]
 import { chromium } from '@playwright/test';
 import { quiz1 } from '../../src/data/quiz1.js';
 import { quiz2 } from '../../src/data/quiz2.js';
 import { quiz3 } from '../../src/data/quiz3.js';
+import { quiz4 } from '../../src/data/quiz4.js';
 const [out, url = 'http://localhost:4322/way-across-the-sea/'] = process.argv.slice(2);
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
@@ -45,6 +46,7 @@ async function play(quiz, n, picks, wrong) {
 await play(quiz1, 1, { 2: 'capernaum', 6: 'salamis' }, 4);
 await play(quiz2, 2, { 4: 'philippi' }, 5);
 await play(quiz3, 3, { 0: 'ephesus' }, 6);
+await play(quiz4, 4, { 6: 'melita' }, 3);
 console.log('progress:', await p.evaluate(() => localStorage.getItem('waysea.progress')));
 console.log('errors:', errs);
 await b.close();

@@ -21,6 +21,11 @@ export const cities = [
   { id: 'gades', la: 'Gades', en: 'Gades', ro: 'Gades', modern: 'Cádiz, Spain', at: [-6.29, 36.53], tier: 3, port: true },
   { id: 'londinium', la: 'Londinium', en: 'London', ro: 'Londra', modern: 'London, UK', at: [-0.09, 51.51], tier: 3 },
   { id: 'treveri', la: 'Augusta Treverorum', en: 'Trier', ro: 'Trier', modern: 'Trier, Germany', at: [6.64, 49.75], tier: 3 },
+  { id: 'forumappii', la: 'Forum Appii', en: 'Forum of Appius', ro: 'Forul lui Apiu', modern: 'near Borgo Faiti, Italy', at: [13.07, 41.45], tier: 3 },
+  // Crete
+  { id: 'kaloilimenes', la: 'Kaloi Limenes', en: 'Fair Havens', ro: 'Limanuri Bune', modern: 'Kaloi Limenes, Crete', at: [24.80, 34.93], tier: 3, port: true, lab: 'b' },
+  { id: 'phoenix', la: 'Phoenix', en: 'Phoenix', ro: 'Fenix', modern: 'near Loutro, Crete', at: [24.08, 35.20], tier: 3, port: true, lab: 'l' },
+  { id: 'cauda', la: 'Cauda', en: 'Cauda', ro: 'Clauda', modern: 'Gavdos, Greece', at: [24.08, 34.85], tier: 3, port: true, lab: 'b' },
   // Africa
   { id: 'carthago', la: 'Carthago', en: 'Carthage', ro: 'Cartagina', modern: 'near Tunis, Tunisia', at: [10.32, 36.85], tier: 2, port: true },
   { id: 'hippo', la: 'Hippo Regius', en: 'Hippo', ro: 'Hippo', modern: 'Annaba, Algeria', at: [7.75, 36.88], tier: 3, port: true },
@@ -138,6 +143,7 @@ export const regions = [
   { la: 'MAVRETANIA', at: [-4.2, 34.9], size: 0.7 },
   { la: 'AEGYPTVS', at: [30.6, 27.6], size: 1.1 },
   { la: 'CYRENAICA', at: [23.4, 31.0], size: 0.7 },
+  { la: 'CRETA', at: [25.3, 35.45], size: 0.4 },
   { la: 'ACHAIA', at: [21.9, 37.45], size: 0.55 },
   { la: 'MACEDONIA', at: [21.4, 41.65], size: 0.65 },
   { la: 'THRACIA', at: [26.0, 42.1], size: 0.7 },
@@ -173,7 +179,7 @@ export const seas = [
 ];
 
 // Smaller names that appear only when zoomed in (minK = zoom level from which they show).
-// kind: 'water' (lakes, seas) | 'river' | 'region' | 'mount' (a peak, drawn with a little glyph).
+// kind: 'water' (lakes, seas) | 'river' | 'region' | 'mount' (a peak, drawn with a little glyph) | 'town' (a village, a dot).
 // name: {en, ro} for places kids know by their Bible names; la: Latin, for the great rivers.
 export const details = [
   // The Holy Land
@@ -190,6 +196,7 @@ export const details = [
   { kind: 'mount', name: { en: 'Mt Carmel', ro: 'Muntele Carmel' }, at: [35.02, 32.70], anchor: 'end', minK: 6 },
   { kind: 'mount', name: { en: 'Mt Hermon', ro: 'Muntele Hermon' }, at: [35.86, 33.42], minK: 6 },
   { kind: 'mount', name: { en: 'Mt Tabor', ro: 'Muntele Tabor' }, at: [35.39, 32.687], minK: 9 },
+  { kind: 'town', name: { en: 'Bethany', ro: 'Betania' }, at: [35.262, 31.771], minK: 8 },
   { kind: 'mount', name: { en: 'Mt of Olives', ro: 'Muntele Măslinilor' }, at: [35.245, 31.779], anchor: 'end', minK: 11 },
   // Great rivers
   { kind: 'river', la: 'Nilus', at: [31.25, 28.4], rot: -78, minK: 1.4 },
