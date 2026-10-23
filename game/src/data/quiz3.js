@@ -29,7 +29,7 @@ export const quiz3 = {
     },
     {
       type: 'mc',
-      q: { en: 'The sons of Sceva tried to drive out an evil spirit "by the Jesus whom Paul preaches". What did the spirit answer?', ro: 'Fiii lui Sceva au încercat să scoată un duh rău „pe Iisus pe Care Îl propovăduiește Pavel”. Ce le-a răspuns duhul?' },
+      q: { en: 'The sons of Sceva tried to drive out an evil spirit "by the Jesus whom Paul preaches". What did the spirit answer?', ro: 'Fiii lui Sceva au încercat să scoată un duh rău în numele lui Iisus, Cel pe Care Îl propovăduia Pavel. Ce le-a răspuns duhul?' },
       options: [
         { en: '"Jesus I know, and Paul I know, but who are you?"', ro: '„Pe Iisus Îl cunosc, și pe Pavel îl știu, dar voi cine sunteți?”' },
         { en: '"I will go out at once!"', ro: '„Ies chiar acum!”' },
