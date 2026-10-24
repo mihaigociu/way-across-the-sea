@@ -1,4 +1,4 @@
-// "The story so far": the prologue before Paul's journeys (Acts 1–12, c. AD 30–46),
+// "How it all began": the prologue before Paul's journeys (Acts 1–12, c. AD 30–46),
 // told by Grandfather Eli, an eyewitness and believer (baptized at Pentecost).
 //
 // Each step:
@@ -12,7 +12,7 @@
 const JERUSALEM = 'hierosolyma';
 
 export const intro = {
-  title: { en: 'The story so far', ro: 'Povestea de până acum' },
+  title: { en: 'How it all began', ro: 'Cum a început totul' },
   years: { en: 'c. AD 30–46 · Acts 1–12', ro: 'cca. 30–46 d.Hr. · Faptele Apostolilor 1–12' },
   steps: [
     {

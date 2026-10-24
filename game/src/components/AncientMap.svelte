@@ -14,16 +14,20 @@
   import { paulSecondJourney } from '../data/journey2.js';
   import { paulThirdJourney } from '../data/journey3.js';
   import { paulVoyageToRome } from '../data/journey4.js';
+  import { andrewBlackSea } from '../data/journey5.js';
   import { intro } from '../data/intro.js';
   import { quiz1 } from '../data/quiz1.js';
   import { quiz2 } from '../data/quiz2.js';
   import { quiz3 } from '../data/quiz3.js';
   import { quiz4 } from '../data/quiz4.js';
+  import { quiz5 } from '../data/quiz5.js';
   import Quiz from './Quiz.svelte';
 
   // ---------- static geometry (projected once) ----------
   const city = Object.fromEntries(cities.map((c) => [c.id, { ...c, xy: project(c.at) }]));
   const cityList = Object.values(city);
+  // A city's name on the map: Latin, or (for a place of memory, not an ancient town) one per language.
+  const cityLa = (c, lang) => (typeof c.la === 'string' ? c.la : c.la[lang]);
   const smooth = line().curve(curveCatmullRom.alpha(0.5));
   const polyPath = (ring) => 'M' + ring.map((p) => project(p).map((v) => v.toFixed(1)).join(',')).join('L') + 'Z';
   const empirePath = empire.map(polyPath).join('');
@@ -56,8 +60,8 @@
   // ---------- UI state ----------
   let lang = $state('en');
   const T = {
-    en: { play: "Paul's First Journey", next: 'Next', back: 'Back', exit: 'Close', reset: 'Whole map', chapters: 'Chapters', nextUp: 'Next', allDone: 'All chapters done ★', locked: 'Pass the quiz before it to unlock', note: 'What historians say', lamps: 'Christian communities', lanes: 'Sea lanes', empire: 'Roman Empire (c. AD 46)', step: 'Stop', of: 'of', modern: 'Today', finish: 'Finish' },
-    ro: { play: 'Prima călătorie a lui Pavel', next: 'Înainte', back: 'Înapoi', exit: 'Închide', reset: 'Toată harta', chapters: 'Capitole', nextUp: 'Urmează', allDone: 'Toate capitolele, gata ★', locked: 'Treci testul de dinainte ca să deblochezi', note: 'Ce spun istoricii', lamps: 'Comunități creștine', lanes: 'Rute pe mare', empire: 'Imperiul Roman (cca. 46 d.Hr.)', step: 'Oprirea', of: 'din', modern: 'Astăzi', finish: 'Gata' },
+    en: { play: "Paul's First Journey", next: 'Next', back: 'Back', exit: 'Close', reset: 'Whole map', chapters: 'Chapters', nextUp: 'Next', allDone: 'All chapters done ★', locked: 'Pass the quiz before it to unlock', soon: 'coming soon', quiz: 'Quiz', tradition: 'a tradition', note: 'What historians say', lamps: 'Christian communities', lanes: 'Sea lanes', empire: 'Roman Empire (c. AD 46)', step: 'Stop', of: 'of', modern: 'Today', finish: 'Finish' },
+    ro: { play: 'Prima călătorie a lui Pavel', next: 'Înainte', back: 'Înapoi', exit: 'Închide', reset: 'Toată harta', chapters: 'Capitole', nextUp: 'Urmează', allDone: 'Toate capitolele, gata ★', locked: 'Treci testul de dinainte ca să deblochezi', soon: 'în curând', quiz: 'Test', tradition: 'o tradiție', note: 'Ce spun istoricii', lamps: 'Comunități creștine', lanes: 'Rute pe mare', empire: 'Imperiul Roman (cca. 46 d.Hr.)', step: 'Oprirea', of: 'din', modern: 'Astăzi', finish: 'Gata' },
   };
   let t = $derived(T[lang]);
 
@@ -70,7 +74,7 @@
   let newlyLit = $state(new Set());
   let year = $state(null); // {en, ro} shown in the cartouche; null = homeYear
 
-  // ---------- introduction ("the story so far") ----------
+  // ---------- introduction ("how it all began") ----------
   let story = $state(null); // { step }
   let arrows = $state([]); // [{ d, head, end, label, style, i }]
   const xy = (p) => (typeof p === 'string' ? city[p].xy : project(p));
@@ -148,7 +152,16 @@
   };
 
   // ---------- journeys ----------
-  const journeys = [paulFirstJourney, paulSecondJourney, paulThirdJourney, paulVoyageToRome];
+  // The chapters menu groups the journeys in books; the book with the next chapter starts open.
+  const books = [
+    { id: 'acts', intro: true, title: { en: 'Book I · The Acts of the Apostles', ro: 'Cartea I · Faptele Apostolilor' },
+      years: { en: 'AD 30–62', ro: '30–62 d.Hr.' }, chapters: [paulFirstJourney, paulSecondJourney, paulThirdJourney, paulVoyageToRome] },
+    { id: 'growth', title: { en: 'Book II · The Church Grows', ro: 'Cartea a II-a · Biserica crește' },
+      years: { en: 'AD 64–330', ro: '64–330 d.Hr.' }, chapters: [] },
+    { id: 'pontus', bonus: true, title: { en: '★ By the Black Sea', ro: '★ La Marea Neagră' },
+      years: { en: 'Bonus chapter', ro: 'Capitol bonus' }, chapters: [andrewBlackSea] },
+  ];
+  const journeys = books.flatMap((b) => b.chapters);
   let J = $state.raw(paulFirstJourney);
   let journey = $state(null); // { step, phase: 'moving'|'card', f, lamp, chosen }
   let legSamples = [];
@@ -250,6 +263,8 @@
   const closeMenuSoon = () => (menuTimer = setTimeout(() => (menuOpen = false), 300));
   // Shown on the closed menu: the journey whose quiz hasn't been passed yet.
   let nextUp = $derived(journeys.find((j) => j.quiz && !progress[j.quiz]?.passed));
+  let openBook = $state(null); // a book id, '' = all closed, null = the book of the next chapter
+  let shownBook = $derived(openBook ?? (books.find((b) => b.chapters.includes(nextUp)) ?? books[0]).id);
 
   // ---------- where the player is, and the language (kept across a page refresh) ----------
   const PLACE_KEY = 'waysea.place';
@@ -280,7 +295,7 @@
 
   // ---------- quiz ----------
   const PROGRESS_KEY = 'waysea.progress';
-  const quizzes = { quiz1, quiz2, quiz3, quiz4 };
+  const quizzes = { quiz1, quiz2, quiz3, quiz4, quiz5 };
   let quizOpen = $state(false);
   let Q = $state.raw(quiz1); // the open quiz
   // The highest rank earned so far, shown in the cartouche.
@@ -618,7 +633,7 @@
           {/if}
           <circle r="11" fill="transparent" />
           {#if showLabel(c) && !picking}
-            <text class="label" class:big={c.tier === 1} class:small={c.tier === 3} {...labelPos(c)}>{c.la}</text>
+            <text class="label" class:big={c.tier === 1} class:small={c.tier === 3} {...labelPos(c)}>{cityLa(c, lang)}</text>
           {/if}
           {#if lit.has(c.id)}
             <use href="#lamp" width="24" height="22" x="-12" y="-16" transform="translate(0,{c.tier === 1 ? 15 : 12}) scale(0.7)" />
@@ -699,25 +714,40 @@
       {#if menuOpen}
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
       <div class="menu" onclick={() => (menuOpen = false)}>
-      <button class="play" onclick={startStory}>
-        <span class="icon">📜</span>
-        <span><b>{intro.title[lang]}</b><small>{intro.years[lang]}</small></span>
-      </button>
-      {#each journeys as j}
-        {@const open = unlocked(j)}
-        <button class="play" class:locked={!open} disabled={!open} onclick={() => startJourney(j)}>
-          <span class="icon">{open ? '▶' : '🔒'}</span>
-          <span><b>{j.title[lang]}</b>
-            <small>{#if open}{j.years[lang]} · {lang === 'en' ? 'Acts' : 'Fapte'} {j.acts}{:else}{t.locked}{/if}</small></span>
+      {#each books as b}
+        {@const isOpen = shownBook === b.id && b.chapters.length > 0}
+        <button class="book" class:bonus={b.bonus} disabled={!b.chapters.length} aria-expanded={isOpen}
+                onclick={(e) => { e.stopPropagation(); openBook = isOpen ? '' : b.id; }}>
+          <span class="caret">{b.chapters.length ? (isOpen ? '▾' : '▸') : '🔒'}</span>
+          <span><b>{b.title[lang]}</b><small>{b.years[lang]}{b.chapters.length ? '' : ` · ${t.soon}`}</small></span>
         </button>
-        {#if j.quiz && open}
-          {@const q = quizzes[j.quiz]}
-          {@const p = progress[q.id]}
-          <button class="play" onclick={() => openQuiz(q)}>
-            <span class="icon">⚓</span>
-            <span><b>{q.title[lang]}</b>
-              <small>{#if p}{'★'.repeat(p.stars)}{'☆'.repeat(3 - p.stars)} · {p.score}/{q.questions.length}{:else}{q.subtitle[lang]}{/if}</small></span>
-          </button>
+        {#if isOpen}
+          <div class="book-items">
+            {#if b.intro}
+              <button class="play" onclick={startStory}>
+                <span class="icon">📜</span>
+                <span><b>{intro.title[lang]}</b><small>{intro.years[lang]}</small></span>
+              </button>
+            {/if}
+            {#each b.chapters as j}
+              {@const open = unlocked(j)}
+              <div class="row">
+                <button class="play" class:locked={!open} disabled={!open} onclick={() => startJourney(j)}>
+                  <span class="icon">{open ? '▶' : '🔒'}</span>
+                  <span><b>{j.title[lang]}</b>
+                    <small>{#if open}{j.years[lang]} · {j.acts ? `${lang === 'en' ? 'Acts' : 'Fapte'} ${j.acts}` : j.sub[lang]}{:else}{t.locked}{/if}</small></span>
+                </button>
+                {#if j.quiz && open}
+                  {@const q = quizzes[j.quiz]}
+                  {@const p = progress[q.id]}
+                  <button class="play quiz" title={q.title[lang]} aria-label={q.title[lang]} onclick={() => openQuiz(q)}>
+                    <span class="icon">⚓</span>
+                    <small>{#if p}{'★'.repeat(p.stars)}{'☆'.repeat(3 - p.stars)}{:else}{t.quiz}{/if}</small>
+                  </button>
+                {/if}
+              </div>
+            {/each}
+          </div>
         {/if}
       {/each}
       </div>
@@ -771,10 +801,10 @@
 
   {#if journey && journey.phase === 'card' && legCity}
     {#key J.id + journey.step}
-    <article class="card">
+    <article class="card" class:tradition={leg.tradition}>
       <div class="step">{J.title[lang]} · {t.step} {journey.step + 1} {t.of} {J.legs.length}</div>
-      <h2>{legCity.la}</h2>
-      <div class="sub">{legCity[lang]} · {t.modern}: {legCity.modern}</div>
+      <h2>{cityLa(legCity, lang)}</h2>
+      <div class="sub">{legCity[lang]} · {t.modern}: {legCity.modern}{leg.tradition ? ` · ${t.tradition}` : ''}</div>
       {#if leg.title}<h3>{leg.title[lang]}</h3>{/if}
       {#if journey.lamp}
         <div class="lit">🪔 {lang === 'en' ? 'A lamp is lit!' : 'Se aprinde o candelă!'}</div>
@@ -811,7 +841,7 @@
 
   {#if hover}
     <div class="tip" style="left:{hover.x + 14}px; top:{hover.y + 14}px">
-      <b>{hover.c.la}</b>
+      <b>{cityLa(hover.c, lang)}</b>
       <span>{hover.c[lang]}{hover.c.port ? ' ⚓' : ''}</span>
       <small>{t.modern}: {hover.c.modern}</small>
     </div>
@@ -879,6 +909,19 @@
   .play .icon { font-size: 22px; color: #8b1e1e; }
   .play b { display: block; font-family: 'Cinzel', serif; font-size: 17px; }
   .play small { font-style: italic; font-size: 13px; }
+  .book { display: flex; align-items: center; gap: 10px; padding: 8px 14px; text-align: left; background: #e4d09f; }
+  .book b { display: block; font-family: 'Cinzel', serif; font-size: 15px; }
+  .book small { font-style: italic; font-size: 12.5px; }
+  .book .caret { width: 1.2em; text-align: center; color: #8b1e1e; }
+  .book.bonus { background: #d9e2d0; border-color: #3f5f55; }
+  .book:disabled { opacity: 0.65; cursor: default; }
+  .book:disabled:hover { background: #e4d09f; }
+  .book-items { display: flex; flex-direction: column; gap: 6px; margin-left: 14px; }
+  .row { display: flex; gap: 6px; }
+  .row .play:first-child { flex: 1; }
+  .play.quiz { flex-direction: column; justify-content: center; gap: 0; padding: 4px 10px; min-width: 64px; }
+  .play.quiz .icon { font-size: 18px; }
+  .play.quiz small { font-style: normal; letter-spacing: 0.05em; color: #8b4a12; }
   .legend { position: absolute; right: 16px; bottom: 20px; background: rgba(239, 224, 185, 0.92); border: 1px solid #5c4630; border-radius: 3px; padding: 8px 12px; font-size: 14px; line-height: 1.6; }
   .sw { display: inline-block; width: 22px; height: 10px; margin-right: 8px; vertical-align: middle; }
   .sw.empire { background: rgba(180, 85, 46, 0.25); border: 1.5px dashed #9a3a22; }

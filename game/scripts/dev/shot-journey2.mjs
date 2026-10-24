@@ -1,7 +1,8 @@
 // Dev helper: plays Paul's second journey (unlocked with ?all) and screenshots every card.
-// Usage: node scripts/dev/shot-journey2.mjs <outDir> [en|ro] [menu item, 4 = second journey, 6 = third]
+// Usage: node scripts/dev/shot-journey2.mjs <outDir> [en|ro] [chapter title, in that language]
 import { chromium } from '@playwright/test';
-const [out, lang = 'en', item = '4'] = process.argv.slice(2);
+import { menuClick } from './menu.mjs';
+const [out, lang = 'en', title = "Paul's Second Journey"] = process.argv.slice(2);
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
 const errs = [];
@@ -11,7 +12,7 @@ await p.goto('http://localhost:4322/way-across-the-sea/?all');
 await p.waitForTimeout(1200);
 if (lang === 'ro') await p.click('.controls button:first-child');
 await p.screenshot({ path: `${out}/00-menu.png` });
-await p.hover('.menu-btn'); await p.click(`.menu .play:nth-child(${item})`);
+await menuClick(p, `.play:has-text(${JSON.stringify(title)})`);
 for (let i = 1; ; i++) {
   await p.waitForSelector('.card', { timeout: 20000 });
   await p.waitForTimeout(1700);

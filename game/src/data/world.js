@@ -44,8 +44,12 @@ export const cities = [
   { id: 'neapolis', la: 'Neapolis', en: 'Neapolis', ro: 'Neapole', modern: 'Kavala, Greece', at: [24.41, 40.94], tier: 3, port: true, lab: 'b' },
   { id: 'byzantium', la: 'Byzantium', en: 'Byzantium', ro: 'Bizanț', modern: 'Istanbul, Turkey', at: [28.98, 41.01], tier: 2, port: true },
   { id: 'sirmium', la: 'Sirmium', en: 'Sirmium', ro: 'Sirmium', modern: 'Sremska Mitrovica, Serbia', at: [19.61, 44.97], tier: 3 },
-  { id: 'tomis', la: 'Tomis', en: 'Tomis', ro: 'Tomis', modern: 'Constanța, Romania', at: [28.65, 44.17], tier: 3, port: true, lab: 'b' },
+  { id: 'tomis', la: 'Tomis', en: 'Tomis', ro: 'Tomis', modern: 'Constanța, Romania', at: [28.65, 44.17], tier: 3, port: true, lab: 'l' },
   { id: 'histria', la: 'Histria', en: 'Histria', ro: 'Histria', modern: 'near Istria, Romania', at: [28.77, 44.55], tier: 3, port: true },
+  { id: 'callatis', la: 'Callatis', en: 'Callatis', ro: 'Callatis', modern: 'Mangalia, Romania', at: [28.585, 43.815], tier: 3, port: true },
+  { id: 'peuce', la: 'Peuce', en: 'Peuce Island', ro: 'Insula Peuce', modern: 'the Danube Delta, Romania', at: [29.3, 45.0], tier: 3 },
+  // Not an ancient town: a place of memory (la in each language, like the details below).
+  { id: 'andreicave', la: { en: "St Andrew's Cave", ro: 'Peștera Sf. Andrei' }, en: "St Andrew's Cave", ro: 'Peștera Sfântului Andrei', modern: 'near Ion Corvin, Constanța County, Romania', at: [27.8, 44.1], tier: 3, lab: 'b' },
   // Asia Minor
   { id: 'ephesus', la: 'Ephesus', en: 'Ephesus', ro: 'Efes', modern: 'near Selçuk, Turkey', at: [27.34, 37.94], tier: 2, port: true },
   { id: 'smyrna', la: 'Smyrna', en: 'Smyrna', ro: 'Smirna', modern: 'İzmir, Turkey', at: [27.14, 38.42], tier: 2, port: true },

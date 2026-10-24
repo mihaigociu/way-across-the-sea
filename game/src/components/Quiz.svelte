@@ -6,10 +6,10 @@
   const UI = {
     en: { start: 'Start', next: 'Next', check: 'Check', reset: 'Start again', retry: 'Try again', close: 'Back to the map',
           story: 'Hear the story again', question: 'Question', of: 'of', clickMap: 'Click on the map…', tapOrder: 'Tap them in order:',
-          correct: 'Correct!', wrong: 'Not this time.', here: 'Here it is:', score: 'Your score', rank: 'Your rank', right: 'The right order:' },
+          correct: 'Correct!', wrong: 'Not this time.', here: 'Here it is:', score: 'Your score', rank: 'Your rank', badge: 'Your badge', right: 'The right order:' },
     ro: { start: 'Începe', next: 'Înainte', check: 'Verifică', reset: 'De la capăt', retry: 'Mai încearcă', close: 'Înapoi la hartă',
           story: 'Ascultă din nou povestea', question: 'Întrebarea', of: 'din', clickMap: 'Dă clic pe hartă…', tapOrder: 'Atinge-le în ordine:',
-          correct: 'Corect!', wrong: 'De data asta, nu.', here: 'Uite unde este:', score: 'Scorul tău', rank: 'Gradul tău', right: 'Ordinea corectă:' },
+          correct: 'Corect!', wrong: 'De data asta, nu.', here: 'Uite unde este:', score: 'Scorul tău', rank: 'Gradul tău', badge: 'Insigna ta', right: 'Ordinea corectă:' },
   };
   let t = $derived(UI[lang]);
 
@@ -108,7 +108,7 @@
         {#each [1, 2, 3] as s}<span class:on={stars >= s}>★</span>{/each}
       </div>
       {#if score >= quiz.pass}
-        <div class="rank">{t.rank}: <b>{quiz.rank[lang]}</b></div>
+        <div class="rank">{quiz.badge ? t.badge : t.rank}: <b>{(quiz.badge ?? quiz.rank)[lang]}</b></div>
       {/if}
     </div>
     <p class="voice">{score >= quiz.pass ? quiz.done.pass[lang] : quiz.done.fail[lang]}</p>

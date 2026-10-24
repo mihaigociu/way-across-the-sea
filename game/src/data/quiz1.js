@@ -1,4 +1,4 @@
-// Quiz gate 1: "The story so far" + Paul's First Journey (Acts 1–14).
+// Quiz gate 1: "How it all began" + Paul's First Journey (Acts 1–14).
 // Question types:
 //   mc    — options[0] is the correct one (shown shuffled)
 //   order — items listed in the correct order (shown shuffled)

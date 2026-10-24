@@ -1,11 +1,13 @@
 // Dev helper: plays quiz 1 end to end (one deliberate mistake), which unlocks the second journey,
-// then quizzes 2, 3 and 4 the same way, taking screenshots along the way.
+// then quizzes 2, 3, 4 and 5 the same way, taking screenshots along the way.
 // Usage: node shot-quiz.mjs <outDir> [url]
 import { chromium } from '@playwright/test';
 import { quiz1 } from '../../src/data/quiz1.js';
 import { quiz2 } from '../../src/data/quiz2.js';
 import { quiz3 } from '../../src/data/quiz3.js';
 import { quiz4 } from '../../src/data/quiz4.js';
+import { quiz5 } from '../../src/data/quiz5.js';
+import { menuClick } from './menu.mjs';
 const [out, url = 'http://localhost:4322/way-across-the-sea/'] = process.argv.slice(2);
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
@@ -17,7 +19,7 @@ await p.reload(); await p.waitForTimeout(1200);
 
 // picks: question index → city id to click; wrong: index of an mc question answered wrongly
 async function play(quiz, n, picks, wrong) {
-  await p.hover(".menu-btn"); await p.click(`.menu >> text=${quiz.title.en}`); await p.waitForTimeout(600);
+  await menuClick(p, `button[title=${JSON.stringify(quiz.title.en)}]`); await p.waitForTimeout(600);
   await p.screenshot({ path: `${out}/q${n}-0-intro.png` });
   await p.click('.quiz button:has-text("Start")');
   for (const [i, q] of quiz.questions.entries()) {
@@ -47,6 +49,7 @@ await play(quiz1, 1, { 2: 'capernaum', 6: 'salamis' }, 4);
 await play(quiz2, 2, { 4: 'philippi' }, 5);
 await play(quiz3, 3, { 0: 'ephesus' }, 6);
 await play(quiz4, 4, { 6: 'melita' }, 3);
+await play(quiz5, 5, { 3: 'tomis' }, 1);
 console.log('progress:', await p.evaluate(() => localStorage.getItem('waysea.progress')));
 console.log('errors:', errs);
 await b.close();

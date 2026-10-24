@@ -29,11 +29,13 @@ Add `?all` to open every chapter without passing the quizzes (for group leaders 
 | `src/data/quiz3.js` | Quiz gate 3, on the third journey |
 | `src/data/journey4.js` | The voyage to Rome: the arrest, Caesarea, the storm and the shipwreck on Malta, Rome |
 | `src/data/quiz4.js` | Quiz gate 4, on the voyage to Rome |
+| `src/data/journey5.js` | Bonus chapter ★, part 1: In the Footsteps of St Andrew (Tomis and Dobrogea, AD 62) |
+| `src/data/quiz5.js` | The bonus chapter's quiz (a badge, not a rank) |
 | `src/data/quiz1.js` | Quiz gate 1: questions (EN/RO), answers, explanations, the children's feedback lines |
 | `src/components/Quiz.svelte` | The quiz player (multiple choice, ordering, map questions) |
 | `src/data/world.js` | Historical data: cities, sea lanes, the empire's extent (c. AD 46), regions, seas, mountains, and the journey (bilingual) |
 | `src/components/AncientMap.svelte` | The map: pan/zoom (d3-zoom), the parchment look, ships, lamps, the journey player |
-| `scripts/dev/shot*.mjs` | Dev helpers that take Playwright screenshots of a running dev server; `shot-quiz.mjs` plays the whole quiz |
+| `scripts/dev/shot*.mjs` | Dev helpers that take Playwright screenshots of a running dev server; `shot-quiz.mjs` plays all the quizzes, `shot-journey2.mjs <out> [lang] [title]` plays a chapter; `menu.mjs` opens the right book in the menu |
 
 To rebuild the base map, download the files into `scripts/raw/` from https://github.com/nvkelso/natural-earth-vector/tree/master/geojson: `ne_10m_land`, `ne_50m_lakes`, `ne_50m_rivers_lake_centerlines`.
 
