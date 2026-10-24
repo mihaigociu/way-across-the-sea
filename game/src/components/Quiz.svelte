@@ -1,6 +1,7 @@
 <script>
   // A quiz gate: multiple choice, put-in-order, and find-it-on-the-map questions.
   // Map questions are delegated to the map via requestPick(question) → Promise<{ ok }>.
+  import { play } from '../lib/sound.js';
   let { quiz, lang, requestPick, endPick, onclose, onreplay, onsave } = $props();
 
   const UI = {
@@ -57,6 +58,7 @@
   function answer(ok) {
     correct = ok;
     if (ok) score++;
+    play(ok ? 'right' : 'wrong');
     phase = 'answered';
   }
   function choose(o) {
@@ -82,6 +84,7 @@
       ask();
     } else {
       phase = 'done';
+      if (score >= quiz.pass) play('rank');
       onsave?.({ score, stars, passed: score >= quiz.pass });
     }
   }

@@ -1,6 +1,7 @@
 // Paul's voyage to Rome (Acts 21:17–28:31), c. AD 57–62: the arrest, two years at Caesarea, the storm, Malta, Rome.
 // Same leg fields as journey2.js and journey3.js, plus:
 //   dark — true: don't light this place's lamp yet (we are here, but not on land / not welcomed yet)
+//   sound — the background sound for this page, instead of the usual one: 'storm' | 'quiet'
 // The storm legs (Fair Havens to Malta) are where the sailing mini-game will go.
 
 export const paulVoyageToRome = {
@@ -90,7 +91,7 @@ export const paulVoyageToRome = {
         en: "\"The Fast\" is the Day of Atonement, in late September or October. Romans thought sailing was risky from mid-September, and from November to March the sea was \"closed\": hardly any ship went out.",
         ro: "„Postul” este Ziua Ispășirii, la sfârșitul lui septembrie sau în octombrie. Romanii socoteau mersul pe mare riscant de la jumătatea lui septembrie, iar din noiembrie până în martie marea era „închisă”: aproape nicio corabie nu ieșea în larg.",
       } },
-    { to: 'cauda', mode: 'sea', via: [[24.6, 34.98], [24.35, 34.95]], title: { en: 'The northeaster', ro: 'Eurachilonul' },
+    { to: 'cauda', mode: 'sea', sound: 'storm', via: [[24.6, 34.98], [24.35, 34.95]], title: { en: 'The northeaster', ro: 'Eurachilonul' },
       focus: ['kaloilimenes', 'phoenix', [18.6, 31.8], [21.5, 35.6]],
       arrows: [
         { from: 'kaloilimenes', to: 'phoenix', label: { en: 'We never got there', ro: 'N-am mai ajuns acolo' }, style: 'blocked', anchor: 'end' },
@@ -98,15 +99,15 @@ export const paulVoyageToRome = {
       ],
       en: "Not long after, a terrible wind comes rushing down from the mountains of Crete: the Northeaster! The ship can't turn into the wind, so we are driven along. Behind the little island of Cauda, we just manage to pull the ship's boat on board. The sailors pass ropes under the ship to hold it together. They are afraid we will be driven onto the sandbanks of Syrtis, off Africa, so they lower the sea anchor. The next day they throw cargo overboard, and on the third day, with their own hands, the ship's tackle too.",
       ro: "Nu după multă vreme, un vânt cumplit se năpustește din munții Cretei: Eurachilonul! Corabia nu poate ține piept vântului, așa că ne lăsăm duși. Pe după o insuliță numită Clauda, abia reușim să tragem barca pe corabie. Marinarii trec funii pe sub corabie, ca s-o țină să nu se desfacă. Se tem să nu fim aruncați pe bancurile de nisip ale Sirtei, lângă Africa, așa că lasă în jos ancora plutitoare. A doua zi aruncă în mare din încărcătură, iar a treia zi, cu mâinile lor, și uneltele corăbiei." },
-    { to: 'melita', mode: 'sea', dark: true, via: [[22.5, 35.0], [20.0, 35.4], [17.5, 35.7], [15.6, 35.95], [14.65, 35.98]],
+    { to: 'melita', mode: 'sea', dark: true, sound: 'storm', via: [[22.5, 35.0], [20.0, 35.4], [17.5, 35.7], [15.6, 35.95], [14.65, 35.98]],
       focus: ['kaloilimenes', 'cauda', 'melita', 'syracusae'],
       title: { en: '"Keep up your courage!"', ro: '„Îndrăzniți!”' },
       en: "For many days we see neither sun nor stars, and the storm keeps raging. We stop hoping that we will be saved. Thalia cries quietly in Father's arms. Then Paul stands up in the middle of everyone: \"Last night an angel of the God to whom I belong stood beside me and said: Do not be afraid, Paul. You must stand before Caesar, and God has given you the lives of all who sail with you. So keep up your courage, men! I believe God.\" On the fourteenth night, as we drift across the sea, the sailors sense that land is near.",
       ro: "Multe zile nu vedem nici soarele, nici stelele, iar furtuna nu se mai oprește. Pierdem orice nădejde că vom scăpa. Thalia plânge încet în brațele tatei. Atunci Pavel se ridică în mijlocul tuturor: „Un înger al Dumnezeului Căruia Îi sunt și Căruia Îi slujesc a stat noaptea aceasta lângă mine și mi-a zis: Nu te teme, Pavele! Tu trebuie să stai înaintea Cezarului, iar Dumnezeu ți-a dăruit pe toți cei care merg cu tine pe mare. De aceea, îndrăzniți, bărbaților! Căci eu cred lui Dumnezeu.” În a paisprezecea noapte, pe când suntem purtați încoace și încolo pe mare, marinarii simt că se apropie de uscat." },
-    { to: 'melita', stay: true, dark: true, title: { en: 'Bread in the storm', ro: 'Pâine în furtună' },
+    { to: 'melita', stay: true, dark: true, sound: 'storm', title: { en: 'Bread in the storm', ro: 'Pâine în furtună' },
       en: "They drop a line: twenty fathoms deep. A little later: fifteen! So they throw out four anchors from the back of the ship and pray for daylight. Some sailors try to escape secretly in the boat, but Paul tells the centurion, and the soldiers cut the ropes and let the boat fall away. Just before dawn, Paul begs everyone to eat: \"Not a hair of your heads will be lost.\" He takes bread, gives thanks to God in front of all of us, breaks it and begins to eat. And all 276 of us take courage and eat too.",
       ro: "Aruncă sonda: douăzeci de stânjeni. Puțin mai încolo: cincisprezece! Așa că aruncă patru ancore de la pupa și se roagă să se facă ziuă. Câțiva marinari încearcă să fugă pe ascuns cu barca, dar Pavel îi spune centurionului, iar soldații taie funiile și lasă barca să cadă. Puțin înainte de ziuă, Pavel îi roagă pe toți să mănânce: „Niciunul dintre voi nu va pierde niciun fir de păr din cap.” Ia pâine, mulțumește lui Dumnezeu înaintea noastră, a tuturor, o frânge și începe să mănânce. Și toți, câți suntem, 276 de suflete, prindem curaj și mâncăm și noi." },
-    { to: 'melita', stay: true, dark: true, title: { en: 'Shipwreck!', ro: 'Naufragiul!' },
+    { to: 'melita', stay: true, dark: true, sound: 'storm', title: { en: 'Shipwreck!', ro: 'Naufragiul!' },
       en: "At daybreak we see a bay with a beach. They cut the anchors, raise the front sail and head for the shore. But the ship strikes a sandbank: the front gets stuck, and the back is broken to pieces by the waves! The soldiers want to kill the prisoners, so that none can swim away, but Julius stops them, because he wants to save Paul. \"Everyone who can swim, jump in first!\"",
       ro: "Când se face ziuă, vedem un golf cu plajă. Taie ancorele, ridică pânza din față și pornesc spre țărm. Dar corabia se înfige într-un banc de nisip: partea din față rămâne înțepenită, iar partea din spate e sfărâmată de valuri! Soldații vor să-i omoare pe întemnițați, ca să nu scape niciunul înot, dar Iuliu îi oprește, pentru că vrea să-l scape pe Pavel. „Cine știe să înoate să sară primul!”",
       choice: {

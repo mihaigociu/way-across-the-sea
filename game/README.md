@@ -29,6 +29,7 @@ Add `?all` to open every chapter without passing the quizzes (for group leaders 
 | `src/data/quiz3.js` | Quiz gate 3, on the third journey |
 | `src/data/journey4.js` | The voyage to Rome: the arrest, Caesarea, the storm and the shipwreck on Malta, Rome |
 | `src/data/quiz4.js` | Quiz gate 4, on the voyage to Rome |
+| `src/lib/sound.js` | All the sounds, made in the browser (Web Audio, no files): sea and wind, page, lamp, bell, quiz sounds, and the Seikilos song on a lyre |
 | `src/data/journey5.js` | Bonus chapter ★, part 1: In the Footsteps of St Andrew (Tomis and Dobrogea, AD 62) |
 | `src/data/quiz5.js` | The bonus chapter's quiz (a badge, not a rank) |
 | `src/data/quiz1.js` | Quiz gate 1: questions (EN/RO), answers, explanations, the children's feedback lines |

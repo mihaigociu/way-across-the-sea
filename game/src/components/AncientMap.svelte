@@ -22,6 +22,7 @@
   import { quiz4 } from '../data/quiz4.js';
   import { quiz5 } from '../data/quiz5.js';
   import Quiz from './Quiz.svelte';
+  import { start as startSound, soundOn, setSoundOn, ambience, play, theme, stopTheme } from '../lib/sound.js';
 
   // ---------- static geometry (projected once) ----------
   const city = Object.fromEntries(cities.map((c) => [c.id, { ...c, xy: project(c.at) }]));
@@ -60,8 +61,8 @@
   // ---------- UI state ----------
   let lang = $state('en');
   const T = {
-    en: { play: "Paul's First Journey", next: 'Next', back: 'Back', exit: 'Close', reset: 'Whole map', chapters: 'Chapters', nextUp: 'Next', allDone: 'All chapters done ★', locked: 'Pass the quiz before it to unlock', soon: 'coming soon', quiz: 'Quiz', tradition: 'a tradition', note: 'What historians say', lamps: 'Christian communities', lanes: 'Sea lanes', empire: 'Roman Empire (c. AD 46)', step: 'Stop', of: 'of', modern: 'Today', finish: 'Finish' },
-    ro: { play: 'Prima călătorie a lui Pavel', next: 'Înainte', back: 'Înapoi', exit: 'Închide', reset: 'Toată harta', chapters: 'Capitole', nextUp: 'Urmează', allDone: 'Toate capitolele, gata ★', locked: 'Treci testul de dinainte ca să deblochezi', soon: 'în curând', quiz: 'Test', tradition: 'o tradiție', note: 'Ce spun istoricii', lamps: 'Comunități creștine', lanes: 'Rute pe mare', empire: 'Imperiul Roman (cca. 46 d.Hr.)', step: 'Oprirea', of: 'din', modern: 'Astăzi', finish: 'Gata' },
+    en: { play: "Paul's First Journey", next: 'Next', back: 'Back', exit: 'Close', reset: 'Whole map', chapters: 'Chapters', nextUp: 'Next', allDone: 'All chapters done ★', locked: 'Pass the quiz before it to unlock', soon: 'coming soon', soundOn: 'Turn the sound on', soundOff: 'Turn the sound off', quiz: 'Quiz', tradition: 'a tradition', note: 'What historians say', lamps: 'Christian communities', lanes: 'Sea lanes', empire: 'Roman Empire (c. AD 46)', step: 'Stop', of: 'of', modern: 'Today', finish: 'Finish' },
+    ro: { play: 'Prima călătorie a lui Pavel', next: 'Înainte', back: 'Înapoi', exit: 'Închide', reset: 'Toată harta', chapters: 'Capitole', nextUp: 'Urmează', allDone: 'Toate capitolele, gata ★', locked: 'Treci testul de dinainte ca să deblochezi', soon: 'în curând', soundOn: 'Pornește sunetul', soundOff: 'Oprește sunetul', quiz: 'Test', tradition: 'o tradiție', note: 'Ce spun istoricii', lamps: 'Comunități creștine', lanes: 'Rute pe mare', empire: 'Imperiul Roman (cca. 46 d.Hr.)', step: 'Oprirea', of: 'din', modern: 'Astăzi', finish: 'Gata' },
   };
   let t = $derived(T[lang]);
 
@@ -99,6 +100,8 @@
     }));
     if (s.focus === 'all') resetView();
     else zoomTo(s.focus.map(xy), 1600);
+    play('page');
+    if (s.light?.length) setTimeout(() => play('lamp'), 700);
   }
   function startStory() {
     quizOpen = false;
@@ -106,8 +109,10 @@
     traveller = null;
     drawn = [];
     storyGo(0);
+    theme();
   }
   function endStory() {
+    stopTheme();
     story = null;
     arrows = [];
     year = null;
@@ -198,6 +203,8 @@
     drawn = [];
     arrows = legArrows(J.legs[0]);
     journey = { step: 0, phase: 'card', f: 1, lamp: false, chosen: null };
+    play('bell');
+    theme();
     const [x, y] = city[J.legs[0].to].xy;
     traveller = { x, y, mode: 'land', flip: false };
     if (J.legs[0].focus) focusLeg(J.legs[0]);
@@ -211,9 +218,11 @@
     if (leg.year) year = leg.year;
     focusLeg(leg);
     journey = { step, phase: 'moving', f: 0, lamp: false, chosen: null };
+    play('page');
     if (!legSamples[step]) arrive();
   }
   function endJourney() {
+    stopTheme();
     journey = null;
     traveller = null;
     arrows = []; // the route and the lamps stay on the map until something else starts
@@ -226,6 +235,7 @@
     if (lamp) {
       lit = new Set([...lit, ...fresh]);
       newlyLit = new Set([...newlyLit, ...fresh]);
+      play('lamp');
     }
     arrows = legArrows(leg);
     journey = { ...journey, phase: 'card', f: 1, lamp };
@@ -234,6 +244,7 @@
   function choose(n) {
     if (!journey) return;
     journey = { ...journey, chosen: n };
+    play('pick');
     tick().then(() => document.querySelector('.card .buttons')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
   }
 
@@ -422,6 +433,11 @@
 
     loadProgress();
     lit = new Set(litHome());
+    soundIsOn = soundOn();
+    // Browsers only allow sound after the player has clicked or pressed a key.
+    const wake = () => startSound();
+    window.addEventListener('pointerdown', wake);
+    window.addEventListener('keydown', wake);
     unlockAll = new URLSearchParams(location.search).has('all');
     laneSamples = lanes.map((l) => samplePath(l.d));
     ships = Array.from({ length: 14 }, (_, i) => {
@@ -465,7 +481,11 @@
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('pointerdown', wake);
+      window.removeEventListener('keydown', wake);
+    };
   });
 
   // Label placement next to the city marker: right (default), left, below, below-left.
@@ -483,6 +503,19 @@
     c.tier <= 2 || k >= 2.2 || (journey && J.legs.some((l) => l.to === c.id || l.light?.includes(c.id)));
   let leg = $derived(journey ? J.legs[journey.step] : null);
   let legCity = $derived(leg ? city[leg.to] : null);
+
+  // ---------- sound: the background follows where we are; the 🔊 button turns everything off ----------
+  let soundIsOn = $state(true);
+  let ambKind = $derived(
+    quizOpen ? 'quiet'
+      : !journey ? 'harbour'
+      : leg.sound ?? (journey.phase === 'moving' ? (leg.mode === 'sea' ? 'sea' : 'land') : legCity.port ? 'harbour' : 'land'),
+  );
+  $effect(() => ambience(ambKind));
+  function toggleSound() {
+    soundIsOn = !soundIsOn;
+    setSoundOn(soundIsOn);
+  }
 </script>
 
 <div class="frame">
@@ -695,6 +728,7 @@
   </header>
 
   <nav class="controls">
+    <button onclick={toggleSound} aria-pressed={soundIsOn} title={soundIsOn ? t.soundOff : t.soundOn}>{soundIsOn ? '🔊' : '🔇'}</button>
     <button onclick={() => (lang = lang === 'en' ? 'ro' : 'en')} title="Language / Limba">{lang === 'en' ? 'RO' : 'EN'}</button>
     <button onclick={() => zoomBy(1.6)} aria-label="Zoom in">+</button>
     <button onclick={() => zoomBy(1 / 1.6)} aria-label="Zoom out">−</button>
