@@ -408,7 +408,7 @@
     let last = performance.now();
     let raf;
     const tick = (now) => {
-      const dt = Math.min(0.05, (now - last) / 1000);
+      const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
       last = now;
       // Ships: constant speed in map pixels, short rest in port at each end.
       ships = ships.map((s) => {

@@ -56,7 +56,7 @@ export const quiz4 = {
     },
     {
       type: 'mc',
-      q: { en: 'At Fair Havens, on Crete, why did Paul say the ship should not sail on?', ro: 'La Limanuri Bune, în Creta, de ce a spus Pavel că corabia nu trebuie să mai plece?' },
+      q: { en: 'At Fair Havens, on Crete, why did Paul say the ship should not sail on?', ro: 'La Limanuri Bune, în Creta, de ce i-a sfătuit Pavel să nu mai plece pe mare?' },
       options: [
         { en: 'It was too late in the year: winter storms were coming', ro: 'Era prea târziu în an: veneau furtunile de iarnă' },
         { en: 'He wanted to see the mountains of Crete', ro: 'Voia să vadă munții Cretei' },
