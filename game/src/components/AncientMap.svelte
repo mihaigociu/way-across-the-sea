@@ -68,7 +68,7 @@
   let hover = $state(null); // {c, x, y}
   let lit = $state(new Set(litAtStart));
   let newlyLit = $state(new Set());
-  let year = $state(null); // {en, ro} shown in the cartouche; null = AD 46
+  let year = $state(null); // {en, ro} shown in the cartouche; null = homeYear
 
   // ---------- introduction ("the story so far") ----------
   let story = $state(null); // { step }
@@ -107,7 +107,7 @@
     story = null;
     arrows = [];
     year = null;
-    lit = new Set(litAtStart);
+    lit = new Set(litHome());
     newlyLit = new Set();
   }
   function storyToJourney() {
@@ -286,6 +286,14 @@
   // The highest rank earned so far, shown in the cartouche.
   let topRank = $derived([quiz4, quiz3, quiz2, quiz1].find((q) => progress[q.id]?.passed));
   let progress = $state({});
+  // The whole map shows the world as far as the player has come: the lamps of every chapter whose quiz is passed,
+  // and the year that chapter ends in.
+  let earned = $derived(journeys.filter((j) => progress[j.quiz]?.passed));
+  const litHome = () => [...litAtStart, ...earned.flatMap((j) => j.lamps)];
+  let homeYear = $derived.by(() => {
+    const y = earned.at(-1)?.years.en.match(/(\d+)\D*$/)?.[1] ?? '46';
+    return { en: `c. AD ${y}`, ro: `cca. ${y} d.Hr.` };
+  });
   let picking = $state(false); // a map question is waiting for a click: names are hidden
   let pickMark = $state(null); // { click: [x, y], target: [x, y], r, ok }
   let pickResolve = null;
@@ -320,6 +328,7 @@
   }
   function closeQuiz() {
     quizOpen = false;
+    lit = new Set(litHome());
     endPick();
     resetView();
   }
@@ -397,6 +406,7 @@
     }
 
     loadProgress();
+    lit = new Set(litHome());
     unlockAll = new URLSearchParams(location.search).has('all');
     laneSamples = lanes.map((l) => samplePath(l.d));
     ships = Array.from({ length: 14 }, (_, i) => {
@@ -666,7 +676,7 @@
   <header class="cartouche">
     <h1>The Way Across the Sea</h1>
     {#if topRank}<div class="rank">⚓ {topRank.rank[lang]} {'★'.repeat(progress[topRank.id].stars)}</div>{/if}
-    <p>{lang === 'en' ? 'The Mediterranean world, ' : 'Lumea mediteraneeană, '}{year ? year[lang] : lang === 'en' ? 'c. AD 46' : 'cca. 46 d.Hr.'}</p>
+    <p>{lang === 'en' ? 'The Mediterranean world, ' : 'Lumea mediteraneeană, '}{(year ?? homeYear)[lang]}</p>
   </header>
 
   <nav class="controls">
